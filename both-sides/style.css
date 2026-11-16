@@ -26,7 +26,7 @@ header { min-height:66px; border-bottom:1px solid var(--divider); }
 .hero h1 { font-weight:640; letter-spacing:-.075em; font-size:clamp(42px,5.8vw,78px); margin:0; line-height:1.04; }
 .hero h1:focus { outline:none; }
 .hero p { max-width:55ch; margin:13px auto 0; color:var(--muted); }
-.avatar { position:relative; isolation:isolate; display:grid; place-items:center; width:min(100%,600px); height:clamp(220px,24vw,290px); margin:18px auto 0; border-radius:40px; overflow:hidden; background:radial-gradient(ellipse at 52% 51%,#c9cdc2 0%,#b6bbb1 34%,#898f86 65%,#5e655c 100%); box-shadow:inset 0 1px 1px #ffffff80, inset 0 -16px 44px #2a302b40, 0 15px 39px #171a184a; }
+.avatar { position:relative; isolation:isolate; display:grid; place-items:center; width:min(100%,600px); height:clamp(220px,24vw,290px); margin:18px auto 0; overflow:hidden; background:transparent; }
 .avatar spline-viewer { display:block; position:absolute; inset:0; width:100%; height:100%; opacity:0; }
 .avatar.ready spline-viewer { opacity:1; }
 .avatar.ready .orb-poster { display:none; }
@@ -46,7 +46,9 @@ h2,.fold summary { font-size:22px; line-height:1.25; letter-spacing:-.04em; }
 h2,h3 { margin:0; font-weight:620; }
 .background-box { margin-bottom:22px; }
 .background-box h2 { margin-bottom:15px; }
-.background-box>div+div { margin-top:13px; }
+.info-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.party-name { display:block; width:100%; margin:4px 0 12px; }
+.party-label { overflow-wrap:anywhere; }
 .ref { white-space:pre-wrap; overflow-wrap:anywhere; margin:12px 0 0; }
 .background-box .ref { margin:3px 0 0; }
 button,textarea,input,select { font:inherit; color:inherit; }
@@ -64,12 +66,13 @@ button.link:hover { color:var(--lime); }
 .bside { background:linear-gradient(132deg,#cfeccb,#a9e3a2 45%,#e8f998); }
 textarea,input,select { max-width:100%; }
 textarea { resize:vertical; display:block; width:100%; line-height:1.55; }
-.background-box input,.background-box textarea,.statement,.note,.metric select,select.final {
+.background-box input,.background-box textarea,.party-name,.statement,.note,.metric select,select.final {
   width:100%; background:#292d2b; border:1.5px solid #aab5a7; border-radius:13px; padding:10px 13px; color:var(--ink); box-shadow:inset 0 2px 4px #161a1845;
 }
 .background-box input,.background-box textarea,.metric select,select.final { margin-top:5px; }
 textarea::placeholder,input::placeholder { color:#bac2b8; opacity:1; }
 textarea.statement { margin:14px 0 6px; min-height:126px; }
+.compose textarea.statement { min-height:252px; margin-top:5px; }
 .extra textarea { min-height:112px; }
 .counter { display:block; text-align:right; font-size:11px; }
 :where(button,summary,select,textarea,input):focus-visible { outline:3px solid #e9ff90; outline-offset:3px; }
@@ -105,12 +108,12 @@ textarea.statement { margin:14px 0 6px; min-height:126px; }
   .shell { width:calc(100% - 28px); } header { min-height:52px; }
   .hero { padding:24px 0 20px; } .hero h1 { font-size:clamp(39px,10vw,54px); }
   .avatar { height:217px; margin-top:12px; border-radius:28px; } .hero p { font-size:15px; }
-  .compose,.contextgrid,.smallref .grid,.readcards { grid-template-columns:1fr; }
+  .info-fields,.compose,.contextgrid,.smallref .grid,.readcards { grid-template-columns:1fr; }
   .contextgrid .aextra { order:0; } .contextgrid .acard { order:-1; } .contextgrid .bcard { order:1; } .contextgrid .bextra { order:2; }
   .folds { gap:8px; } .grid { row-gap:10px; } .card,.fold,.panel { border-radius:20px; }
   .folds summary { padding:11px 8px; font-size:15px; } .folds summary:after { width:19px; height:19px; font-size:15px; }
   .inner { padding:2px 8px 12px; } .inner button,.metric select,select.final { padding:8px 5px; font-size:14px; }
-  .metric h3 { font-size:15px; } textarea.statement { min-height:80px; }
+  .metric h3 { font-size:15px; } textarea.statement { min-height:80px; } .compose textarea.statement { min-height:160px; }
   .actions { gap:8px; } .actions button { font-size:14px; } .actions .push { margin-right:0; }
 }
 @media(prefers-reduced-transparency:reduce) { .card,.fold,.panel { background:#3c413e; backdrop-filter:none; } }

@@ -9,7 +9,7 @@ const choices=['Side A','Side B','Both equally','Not enough context'];
 const cases = [
   {
     name: 'Identical ice cream',
-    relationship: 'Roommates', agreement: '',
+    relationship: 'Roommates',
     background: 'They share a freezer. Each bought a tub of the same brand and flavor of ice cream.',
     sides: [
       'I saw B eating the exact ice cream I buy. I thought it was mine. I want a heads-up before anyone eats my food. When B said she bought the same flavor, I wondered why she was copying me. I’m still upset that she didn’t apologize.',
@@ -29,8 +29,8 @@ const cases = [
   },
   {
     name: 'The grocery split',
-    relationship: 'Roommates', agreement: 'They agreed by text to split shared cleaning supplies equally and pay for personal groceries separately.',
-    background: 'One receipt lists $18 in cleaning supplies and $12 in coffee for A.',
+    relationship: 'Roommates',
+    background: 'One receipt lists $18 in cleaning supplies and $12 in coffee for A. They agreed by text to split shared cleaning supplies equally and pay for personal groceries separately.',
     sides: [
       'I paid the $30 bill and asked B for $15. I picked everything up in one trip, so splitting the receipt in half felt simple. I can show B the itemized receipt.',
       'We agreed to split the cleaning supplies. I don’t drink the coffee A bought for herself. I’m happy to send $9 for my half of the supplies.'
@@ -48,11 +48,11 @@ const cases = [
     solution: 'Look at the receipt together and mark the two categories. B sends A $9. If B already sent $15, A returns $6. On the next shared shop, total the shared items before dividing by two.'
   }
 ];
-function localSteps(info={}){
+function localSteps(){
   return [
     'Name the specific event behind your concern and ask B to clarify one detail.',
     'Explain the part you remember differently and share one detail A can check.',
-    info.agreement ? 'Compare the accounts against the prior agreement: “'+info.agreement+'” Choose one next step both can follow.' : 'Write down what both of you can confirm. Choose one next step and agree on when to check back.'
+    'Write down what both of you can confirm. Choose one next step and agree on when to check back.'
   ];
 }
 const generalSolution = 'Identify one detail you both agree on and one you would like to check. Choose a next step together, then agree on what each person will do if the missing detail stays unclear.';
@@ -84,10 +84,8 @@ function segments(s){return (s.match(/[^.!?。！？\n]+[.!?。！？]*/g)||[s])
 function matchSide(s){const lines=segments(s).map(q=>({q,t:tokens(q)}));return training.map(group=>{let best={q:'',score:0};for(const line of lines){const score=Math.max(...group.map(ex=>similarity(line.t,ex)));if(score>best.score)best={q:line.q,score}}return best.score>=.24?best:{q:'',score:0}})}
 const cueText=['a detail that could be checked','a reason for an action or request','a reference to an agreement','an acknowledgment or offer of repair'];
 function localReview(pair,info={}){
-const solution=info.agreement
-  ? 'Read the prior agreement together: “'+info.agreement+'” Identify which part applies to this situation, then agree on one concrete next step.'
-  : generalSolution;
-const hits=pair.map(matchSide);const leads=[];return {engine:'Local text model',steps:localSteps(info),keywords:['clearer signal','too little distinguishing evidence'],solution,summary:'Side A and Side B describe the situation in their own words. Compare their opening claims below.',rows:DIMS.map((d,i)=>{const a=hits[0][i].q,b=hits[1][i].q;let why=a&&b?'Both accounts mention '+cueText[i]+'. Compare the highlighted passages.':a||b?'Side '+(a?'A':'B')+' mentions '+cueText[i]+'. The other account may need clarification.':'The model could not identify a clear passage for this dimension.';const clear=i!==2 && Math.max(hits[0][i].score,hits[1][i].score)>=.34;const pick=clear && Boolean(a)!==Boolean(b)?(a?'Side A':'Side B'):'Not enough context';if(pick!=='Not enough context')leads.push(pick+' on '+d[0].toLowerCase());return {pick,why,a,b}}),overall:leads.length?'The text gives a clearer signal for '+leads.join(' and ')+'. These are tentative readings of the wording.':'There is too little distinguishing evidence for an overall preference.'}}
+const solution=generalSolution;
+const hits=pair.map(matchSide);const leads=[];return {engine:'Local text model',steps:localSteps(),keywords:['clearer signal','too little distinguishing evidence'],solution,summary:'Side A and Side B describe the situation in their own words. Compare their opening claims below.',rows:DIMS.map((d,i)=>{const a=hits[0][i].q,b=hits[1][i].q;let why=a&&b?'Both accounts mention '+cueText[i]+'. Compare the highlighted passages.':a||b?'Side '+(a?'A':'B')+' mentions '+cueText[i]+'. The other account may need clarification.':'The model could not identify a clear passage for this dimension.';const clear=i!==2 && Math.max(hits[0][i].score,hits[1][i].score)>=.34;const pick=clear && Boolean(a)!==Boolean(b)?(a?'Side A':'Side B'):'Not enough context';if(pick!=='Not enough context')leads.push(pick+' on '+d[0].toLowerCase());return {pick,why,a,b}}),overall:leads.length?'The text gives a clearer signal for '+leads.join(' and ')+'. These are tentative readings of the wording.':'There is too little distinguishing evidence for an overall preference.'}}
 const options={expectedOutputs:[{type:'text',languages:['en']}]};
 async function review(pair,signal,info={}){
   const item=cases.find(c=>infoFields.every(([key])=>c[key]===info[key]) && c.sides.every((side,i)=>side===pair[i]));
@@ -98,21 +96,40 @@ const raw=await session.prompt(task,{signal});const result=JSON.parse(raw.replac
 
 const $=id=>document.getElementById(id);
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-const state={page:'home',relationship:'',background:'',agreement:'',suggestion:'',original:['',''],extra:['',''],draft:['',''],report:null,previous:null,values:['','','',''],final:'',note:'',saved:false,panels:{ai:[true,true],self:[true,true]},references:false};
+const state={page:'home',relationship:'',background:'',names:['',''],suggestion:'',original:['',''],extra:['',''],draft:['',''],report:null,previous:null,values:['','','',''],final:'',note:'',saved:false,panels:{ai:[true,true],self:[true,true]},references:false};
 let controller=null,returnPage='home';
 const copy={home:['Two sides, one story.','Put both perspectives side by side. You decide how much help you want.','01 / 03   Perspectives'],process:['Reading both sides.','You can return to your text at any time.','02 / 03   Review'],analysis:['The comparison.','Read the accounts, add missing context, then choose who judges first.','02 / 03   Review'],context:['A little more context.','Add what each side would like the other to know.','02 / 03   Review'],ai:['AI’s judgment.','Review how the two accounts were assessed and the next step suggested.','03 / 03   Decision'],self:['Your judgment.','Weigh each dimension, choose your result, and write what you think should happen next.','03 / 03   Decision']};
 function go(page,focus=true){state.page=page;const [title,intro,step]=copy[page];$('title').textContent=title;$('intro').textContent=intro;$('step').textContent=step;render();if(focus){$('title').focus({preventScroll:true});window.scrollTo(0,0)}}
 function act(id,label,css=''){return '<button type="button" class="'+css+'" data-action="'+id+'">'+label+'</button>'}
 function badge(i,extra=false){return '<span class="tag '+(i?'bside':'')+'">'+('AB'[i])+(extra?'+':'')+'</span>'}
-function card(i,mode){let side='AB'[i],extra=mode==='extra'||mode==='readextra',write=mode==='write'||mode==='extra',value=extra?(write?state.draft[i]:state.extra[i]):state.original[i],name=extra?'Additional context':'Side '+side;let id=(extra?'extra':'text')+i;
-return '<div class="card '+(extra?'extra ':'')+(i?'b':'a')+(extra?'extra':'card')+'"><div class="cardhead">'+badge(i,extra)+(write?'<label for="'+id+'">':'<span>')+name+(write?'</label>':'</span>')+'</div>'+(write?'<textarea class="statement" id="'+id+'" maxlength="3000" placeholder="'+(extra?'What else matters here?':'Paste or write side '+side+'’s account…')+'">'+esc(value)+'</textarea><span class="counter" aria-hidden="true" id="count-'+id+'">'+value.length+' / 3000</span>':'<p class="ref" dir="auto">'+esc(value||'No added context.')+'</p>')+'</div>'}
+function partyLabel(i) {
+  const party = 'Party ' + 'AB'[i];
+  const name = state.names[i].trim();
+  return name ? party + ' · ' + name : party;
+}
+function choiceLabel(value) {
+  if (value === choices[0]) return partyLabel(0);
+  if (value === choices[1]) return partyLabel(1);
+  return value;
+}
+function card(i,mode) {
+  const side = 'AB'[i];
+  const extra = mode === 'extra' || mode === 'readextra';
+  const writing = mode === 'write' || mode === 'extra';
+  const value = extra ? (writing ? state.draft[i] : state.extra[i]) : state.original[i];
+  const id = (extra ? 'extra' : 'text') + i;
+  const title = mode === 'write' ? 'Party ' + side : partyLabel(i);
+  const heading = '<div class="cardhead">' + badge(i,extra) + '<span class="party-label">' + esc(title) + (extra ? ' · Additional context' : '') + '</span></div>';
+  const nameField = mode === 'write' ? '<label class="label" for="name' + i + '">Name (optional)</label><input class="party-name" id="name' + i + '" aria-label="Party ' + side + ' name (optional)" maxlength="80" value="' + esc(state.names[i]) + '">' : '';
+  const account = writing ? '<label class="label" for="' + id + '">' + (extra ? 'Additional context' : 'Perspective') + '</label><textarea class="statement" id="' + id + '" aria-label="Party ' + side + (extra ? ' additional context' : ' perspective') + '" maxlength="3000" placeholder="' + (extra ? 'What else matters here?' : 'Paste or write Party ' + side + '’s account…') + '">' + esc(value) + '</textarea><span class="counter" aria-hidden="true" id="count-' + id + '">' + value.length + ' / 3000</span>' : '<p class="ref" dir="auto">' + esc(value || 'No added context.') + '</p>';
+  return '<div class="card ' + (extra ? 'extra ' : '') + (i ? 'b' : 'a') + (extra ? 'extra' : 'card') + '">' + heading + nameField + account + '</div>';
+}
 function cards(mode,showExtra=false){return '<div class="grid '+(showExtra?'contextgrid':mode==='write'?'compose':'readcards')+'">'+(showExtra?card(0,mode==='context'?'extra':'readextra'):'')+card(0,mode==='write'?'write':'read')+card(1,mode==='write'?'write':'read')+(showExtra?card(1,mode==='context'?'extra':'readextra'):'')+'</div>'}
-function pickSelect(id,value,label,klass=''){return '<select id="'+id+'" class="'+klass+'" aria-label="'+label+'"><option value="">Choose a view…</option>'+choices.map(c=>'<option '+(c===value?'selected':'')+'>'+c+'</option>').join('')+'</select>'}
-function metricAI(r,i){return '<div class="metric"><h3>'+DIMS[i][0]+'</h3><p><strong>'+esc(r.pick)+'</strong></p><p>'+esc(r.why)+'</p>'+[r.a,r.b].map((q,j)=>q?'<blockquote class="quote '+(j?'bquote':'')+'">'+('AB'[j])+' · “<span dir="auto">'+esc(q)+'</span>”</blockquote>':'').join('')+'</div>'}
+function pickSelect(id,value,label,klass=''){return '<select id="'+id+'" class="'+klass+'" aria-label="'+label+'"><option value="">Choose a view…</option>'+choices.map(c=>'<option value="'+esc(c)+'" '+(c===value?'selected':'')+'>'+esc(choiceLabel(c))+'</option>').join('')+'</select>'}
+function metricAI(r,i){return '<div class="metric"><h3>'+DIMS[i][0]+'</h3><p><strong>'+esc(choiceLabel(r.pick))+'</strong></p><p>'+esc(r.why)+'</p>'+[r.a,r.b].map((q,j)=>q?'<blockquote class="quote '+(j?'bquote':'')+'">'+esc(partyLabel(j))+' · “<span dir="auto">'+esc(q)+'</span>”</blockquote>':'').join('')+'</div>'}
 const infoFields=[
   ['relationship','Relationship','How do A and B know each other?'],
-  ['background','Background','What happened? What facts do both sides share?'],
-  ['agreement','Prior agreement','Did they agree on a rule or expectation beforehand?']
+  ['background','Background','What happened? What facts do both sides share?']
 ];
 function sharedInfo(){return Object.fromEntries(infoFields.map(([key])=>[key,state[key].trim()]))}
 function backgroundBox(editable=false){
@@ -120,13 +137,13 @@ function backgroundBox(editable=false){
   if(!fields.length)return '';
   const content=fields.map(([key,label,hint])=>{
     if(!editable)return '<div><strong>'+label+'</strong><p class="ref" dir="auto">'+esc(state[key])+'</p></div>';
-    const caption='<label for="'+key+'">'+label+(key==='agreement'?' <span class="sub">(optional)</span>':'')+'</label>';
+    const caption='<label for="'+key+'">'+label+'</label>';
     const field=key==='relationship'
       ? '<input id="'+key+'" maxlength="150" placeholder="'+hint+'" value="'+esc(state[key])+'">'
       : '<textarea id="'+key+'" rows="2" maxlength="1500" placeholder="'+hint+'">'+esc(state[key])+'</textarea>';
     return '<div>'+caption+field+'</div>';
   }).join('');
-  return '<section class="card background-box"><h2>Essential information</h2>'+content+'</section>';
+  return '<section class="card background-box"><h2>Essential information</h2><div class="info-fields">'+content+'</div></section>';
 }
 function comparisonKey(){return JSON.stringify([sharedInfo(),state.original])}
 function dimensionInputs(){
@@ -149,28 +166,28 @@ function emphasize(text,keywords=[]){
 }
 function resultsBar(votes){
   const counts=choices.map(choice=>votes.filter(v=>v===choice).length);
-  const labels=['Side A','Side B','Both equally','Insufficient context'];
+  const labels=[partyLabel(0),partyLabel(1),'Both equally','Insufficient context'];
   return '<figure class="result-chart"><figcaption>Judgment across four dimensions</figcaption><div class="result-track" aria-hidden="true">'+
     counts.map((count,i)=>count?'<span class="tone'+i+'" style="flex:'+count+'"></span>':'').join('')+
-    '</div><ul class="result-key">'+counts.map((n,i)=>'<li><i aria-hidden="true" class="tone'+i+'"></i>'+labels[i]+' <strong>'+n+'/4</strong></li>').join('')+'</ul></figure>';
+    '</div><ul class="result-key">'+counts.map((n,i)=>'<li><i aria-hidden="true" class="tone'+i+'"></i>'+esc(labels[i])+' <strong>'+n+'/4</strong></li>').join('')+'</ul></figure>';
 }
 function stepsFor(report){
   if(Array.isArray(report.steps)&&report.steps.length===3)return report.steps;
   const sample=cases.find(item=>item.issue===report.summary);
   if(sample)return sample.steps;
-  const steps=localSteps(sharedInfo());
+  const steps=localSteps();
   if(report.solution)steps[2]=report.solution;
   return steps;
 }
 function stepsMarkup(report){
-  return stepsFor(report).map((text,i)=>'<p class="action-line"><strong>'+['A should','B should','Final suggestion'][i]+'</strong> '+emphasize(text,report.keywords)+'</p>').join('');
+  return stepsFor(report).map((text,i)=>'<p class="action-line"><strong>'+(i<2?esc(state.names[i].trim()||'Party '+'AB'[i])+' should':'Final suggestion')+'</strong> '+emphasize(text,report.keywords)+'</p>').join('');
 }
 function userGuidance(){
   if(!state.values.every(v=>choices.includes(v)))return {chart:'',result:'',suggestion:''};
   const counts=choices.map(c=>state.values.filter(v=>v===c).length);
   const highest=Math.max(...counts);
   const leaders=choices.filter((_,i)=>counts[i]===highest);
-  const reading=leaders.length>1?'Mixed result':leaders[0]==='Not enough context'?'Leave the result open':leaders[0]==='Both equally'?'Balanced result':leaders[0]+' has more support';
+  const reading=leaders.length>1?'Mixed result':leaders[0]==='Not enough context'?'Leave the result open':leaders[0]==='Both equally'?'Balanced result':choiceLabel(leaders[0])+' has more support';
   const key=state.values[0]==='Not enough context'?'Identify the missing evidence':state.values[2]==='Not enough context'?'Clarify the agreement':state.values[3]==='Not enough context'?'Ask how each person was affected':'Agree on one next step';
   const steps=stepsFor(state.report);
   const relevant=state.values[0]==='Side B'?steps[1]:state.values[0]==='Side A'?steps[0]:steps[2];
@@ -199,7 +216,7 @@ function decisionPage(page,report){
 function render(){const p=state.page,report=state.report;let html='';
 if(p==='home')html='<div class="examples"><span>Try a sample</span>'+cases.map((item,i)=>act('example'+i,esc(item.name),'link')).join('')+'</div>'+backgroundBox(true)+'<div class="section-head"><h2>Perspectives</h2></div>'+cards('write')+'<div class="actions"><span id="warn" class="msg push" role="alert"></span>'+act('compare','Compare perspectives &nbsp;→','primary')+'</div>';
 if(p==='process')html=backgroundBox()+cards('read',false)+'<div class="busy" aria-live="polite">Comparing the two accounts…<br>'+act('cancel','Back to editing','link')+'</div>';
-if(p==='analysis'){const before=state.previous;const changed=before?DIMS.filter((_,i)=>JSON.stringify(report.rows[i])!==JSON.stringify(before.rows[i])).map(d=>d[0]):[];html=backgroundBox()+cards('read',state.extra.some(Boolean))+'<section class="panel"><div class="section-head"><h2>What’s in question?</h2><span class="sub">'+esc(report.engine)+'</span></div><p>'+esc(report.summary)+'</p>'+(!report.engine.startsWith('On-device')?[0,1].map(i=>'<blockquote class="quote '+(i?'bquote':'')+'">'+('AB'[i])+' · “<span dir="auto">'+esc(segments(state.original[i])[0])+'</span>”</blockquote>').join(''):'')+(before?'<p class="sub">'+(changed.length?'Updated dimensions · '+changed.join(', '):'Reviewed again. The dimension readings are unchanged.')+'</p>':'')+'</section><div class="actions">'+act('context',state.extra.some(Boolean)?'Edit added context':'Add context','link push')+act('ai','Show AI’s judgment')+act('self','Judge for myself &nbsp;→','primary')+'</div><div class="actions">'+act('edit','Edit original accounts','link push')+'</div>'}
+if(p==='analysis'){const before=state.previous;const changed=before?DIMS.filter((_,i)=>JSON.stringify(report.rows[i])!==JSON.stringify(before.rows[i])).map(d=>d[0]):[];html=backgroundBox()+cards('read',state.extra.some(Boolean))+'<section class="panel"><div class="section-head"><h2>What’s in question?</h2><span class="sub">'+esc(report.engine)+'</span></div><p>'+esc(report.summary)+'</p>'+(!report.engine.startsWith('On-device')?[0,1].map(i=>'<blockquote class="quote '+(i?'bquote':'')+'">'+esc(partyLabel(i))+' · “<span dir="auto">'+esc(segments(state.original[i])[0])+'</span>”</blockquote>').join(''):'')+(before?'<p class="sub">'+(changed.length?'Updated dimensions · '+changed.join(', '):'Reviewed again. The dimension readings are unchanged.')+'</p>':'')+'</section><div class="actions">'+act('context',state.extra.some(Boolean)?'Edit added context':'Add context','link push')+act('ai','Show AI’s judgment')+act('self','Judge for myself &nbsp;→','primary')+'</div><div class="actions">'+act('edit','Edit original accounts','link push')+'</div>'}
 if(p==='context')html=backgroundBox()+cards('context',true)+'<div class="actions">'+act('discard','Back to comparison','link push')+act('update','Update analysis &nbsp;→','primary')+'</div>';
 const decision=p==='ai'||p==='self';
 if(decision)html=decisionPage(p,report);
@@ -209,14 +226,17 @@ if(decision){
   const ref=$('refs');ref.ontoggle=()=>{state.references=ref.open};
 }}
 function edited(){state.saved=false;if($('savestatus'))$('savestatus').textContent=''}
-$('app').addEventListener('input',e=>{const el=e.target,id=el.id;let m;if(infoFields.some(([key])=>key===id)){state[id]=el.value}else if((m=/^(text|extra)([01])$/.exec(id))){(m[1]==='text'?state.original:state.draft)[+m[2]]=el.value;$('count-'+id).textContent=el.value.length+' / 3000';el.removeAttribute('aria-invalid');if($('warn'))$('warn').textContent=''}else if((m=/^dim([0-3])$/.exec(id))){state.values[+m[1]]=el.value;edited();
+$('app').addEventListener('input',e=>{const el=e.target,id=el.id;let m;if((m=/^name([01])$/.exec(id))){state.names[+m[1]]=el.value}else if(infoFields.some(([key])=>key===id)){state[id]=el.value}else if((m=/^(text|extra)([01])$/.exec(id))){(m[1]==='text'?state.original:state.draft)[+m[2]]=el.value;$('count-'+id).textContent=el.value.length+' / 3000';el.removeAttribute('aria-invalid');if($('warn'))$('warn').textContent=''}else if((m=/^dim([0-3])$/.exec(id))){state.values[+m[1]]=el.value;edited();
 const hints=userGuidance();
 $('user-chart').innerHTML=hints.chart;$('result-hint').innerHTML=hints.result;$('suggestion-hint').innerHTML=hints.suggestion}else if(id==='finalChoice'){state.final=el.value;edited()}else if(id==='suggestion'||id==='note'){state[id]=el.value;edited()}});
 function clearVotes(){state.panels={ai:[true,true],self:[true,true]};state.suggestion='';state.values=['','','',''];state.note='';state.saved=false;state.final='';state.references=false}
 let analyzedOriginal='';
 const storageKey='both-sides-review-v1';
 function persist(){try{sessionStorage.setItem(storageKey,JSON.stringify({state,analyzedOriginal}))}catch{}}
-function restore(){try{const saved=JSON.parse(sessionStorage.getItem(storageKey));if(!saved||!Array.isArray(saved.state.original)||saved.state.original.length!==2)return;Object.assign(state,saved.state);if(state.page==='decision')state.page=saved.state.folds?.[0]?'ai':'self';if(!state.suggestion.trim())state.saved=false;analyzedOriginal=saved.analyzedOriginal||'';if(state.page==='process'||!copy[state.page]||(state.page!=='home'&&!state.report))state.page='home'}catch{}}
+function restore(){try{const saved=JSON.parse(sessionStorage.getItem(storageKey));if(!saved||!Array.isArray(saved.state.original)||saved.state.original.length!==2)return;Object.assign(state,saved.state);
+if(typeof state.agreement==='string' && state.agreement.trim())state.background=[state.background,state.agreement].filter(Boolean).join(' ');
+delete state.agreement;
+if(state.page==='decision')state.page=saved.state.folds?.[0]?'ai':'self';if(!state.suggestion.trim())state.saved=false;analyzedOriginal=saved.analyzedOriginal||'';if(state.page==='process'||!copy[state.page]||(state.page!=='home'&&!state.report))state.page='home'}catch{}}
 window.addEventListener?.('pagehide',persist);
 async function analyze(from){returnPage=from;const active=new AbortController();controller=active;const extras=from==='context'?state.draft:state.extra;const pair=state.original.map((s,i)=>[s.trim(),extras[i].trim()].filter(Boolean).join('\n'));go('process');let timeout;try{await new Promise(r=>setTimeout(r,100));if(active.signal.aborted)return;
 const result=await Promise.race([review(pair,active.signal,sharedInfo()),new Promise(resolve=>{timeout=setTimeout(()=>resolve(localReview(pair,sharedInfo())),18000)})]);if(active.signal.aborted)return;
@@ -224,13 +244,13 @@ state.previous=from==='context'?state.report:null;state.report=result;state.extr
 $('app').addEventListener('click',async e=>{const button=e.target.closest('button[data-action]');if(!button)return;switch(button.dataset.action){
 case 'example0':case 'example1':{
   const item=cases[Number(button.dataset.action.slice(-1))];
-  if((Object.values(sharedInfo()).some(Boolean)||state.original.some(s=>s.trim()))&&!confirm('Replace this comparison with “'+item.name+'”?'))return;
+  if((Object.values(sharedInfo()).some(Boolean)||state.names.some(s=>s.trim())||state.original.some(s=>s.trim()))&&!confirm('Replace this comparison with “'+item.name+'”?'))return;
   for(const [key] of infoFields)state[key]=item[key];
-  state.original=[...item.sides];state.extra=['',''];state.draft=['',''];
+  state.names=['',''];state.original=[...item.sides];state.extra=['',''];state.draft=['',''];
   state.report=null;state.previous=null;analyzedOriginal='';clearVotes();
   go('home',false);$('live').textContent=item.name+' loaded.';break;
 }
-case 'compare':{const missing=state.original.findIndex(s=>!s.trim());if(missing>=0){$('warn').textContent='Add an account for Side '+('AB'[missing])+'.';$('text'+missing).setAttribute('aria-invalid','true');$('text'+missing).focus();return}if(analyzedOriginal===comparisonKey()&&state.report){go('analysis');return}clearVotes();await analyze('home');break}
+case 'compare':{const missing=state.original.findIndex(s=>!s.trim());if(missing>=0){$('warn').textContent='Add an account for Party '+('AB'[missing])+'.';$('text'+missing).setAttribute('aria-invalid','true');$('text'+missing).focus();return}if(analyzedOriginal===comparisonKey()&&state.report){go('analysis');return}clearVotes();await analyze('home');break}
 case 'cancel':controller?.abort();go(returnPage);break;
 case 'context':state.draft=[...state.extra];go('context');break;
 case 'discard':go('analysis');break;
@@ -248,13 +268,18 @@ case 'save':{
   }
   state.saved=true;$('savestatus').textContent='Saved for this session. You can still change your view.';break;
 }
-case 'new':if(!confirm('Start over and clear this comparison?'))return;for(const [key] of infoFields)state[key]='';state.original=['',''];state.extra=['',''];state.draft=['',''];state.report=null;state.previous=null;analyzedOriginal='';clearVotes();go('home');break}
+case 'new':if(!confirm('Start over and clear this comparison?'))return;for(const [key] of infoFields)state[key]='';state.names=['',''];state.original=['',''];state.extra=['',''];state.draft=['',''];state.report=null;state.previous=null;analyzedOriginal='';clearVotes();go('home');break}
 });
 restore();go(state.page,false);
 
 const stage = document.getElementById('avatar-slot');
 const viewer = stage.querySelector('spline-viewer');
-viewer.addEventListener('load-complete', () => stage.classList.add('ready'), {once:true});
+viewer.addEventListener('load-complete', () => {
+  // The exported scene includes a mesh underneath the character.
+  const floor = viewer._spline?.findObjectByName('Floor');
+  if (floor) floor.visible = false;
+  stage.classList.add('ready');
+});
 import('https://cdn.spline.design/@splinetool/viewer@2.0.75/build/spline-viewer.js').catch(() => {
   stage.classList.remove('ready');
 });
