@@ -128,8 +128,24 @@ function pickSelect(id,value,label,klass=''){return '<select id="'+id+'" class="
 function metricAI(r,i){return '<div class="metric"><h3>'+DIMS[i][0]+'</h3><p><strong>'+esc(choiceLabel(r.pick))+'</strong></p><p>'+esc(r.why)+'</p>'+[r.a,r.b].map((q,j)=>q?'<blockquote class="quote '+(j?'bquote':'')+'">'+esc(partyLabel(j))+' · “<span dir="auto">'+esc(q)+'</span>”</blockquote>':'').join('')+'</div>'}
 const infoFields=[
   ['relationship','Relationship','How do A and B know each other?'],
-  ['background','Background','What happened? What facts do both sides share?']
+  ['background','Background','What happened, in one sentence?']
 ];
+const relationships = ['Friends', 'Roommates', 'Couples', 'Family', 'Besties'];
+const sentenceParts = [
+  ['disagreed', 'changed our plans', 'misunderstood each other'],
+  ['we remembered it differently', 'the timing changed', 'we had different expectations']
+];
+function relationshipOptions() {
+  return '<div class="relationship-options" role="group" aria-label="Relationship suggestions">' +
+    relationships.map((name,i) => '<button type="button" data-relationship="'+i+'" aria-pressed="'+(state.relationship.trim().toLowerCase()===name.toLowerCase())+'">'+name+'</button>').join('')+'</div>';
+}
+function sentenceStarter() {
+  const fields = sentenceParts.map((parts,i) =>
+    '<label><span>'+(i?'because':'We')+'</span><select id="phrase'+i+'" aria-label="'+(i?'Reason':'What happened')+'">' +
+    parts.map(word=>'<option>'+word+'</option>').join('')+'</select></label>');
+  return '<details class="sentence-starter"><summary>Try “We ___ because ___.”</summary>' +
+    '<div class="sentence-builder">'+fields.join('')+act('use-sentence','Use sentence')+'</div></details>';
+}
 function sharedInfo(){return Object.fromEntries(infoFields.map(([key])=>[key,state[key].trim()]))}
 function backgroundBox(editable=false){
   const fields=infoFields.filter(([key])=>editable||state[key].trim());
@@ -140,7 +156,7 @@ function backgroundBox(editable=false){
     const field=key==='relationship'
       ? '<input id="'+key+'" maxlength="150" placeholder="'+hint+'" value="'+esc(state[key])+'">'
       : '<textarea id="'+key+'" rows="1" maxlength="1500" placeholder="'+hint+'">'+esc(state[key])+'</textarea>';
-    return '<div>'+caption+field+'</div>';
+    return '<div>'+caption+field+(key==='relationship'?relationshipOptions():sentenceStarter())+'</div>';
   }).join('');
   return '<section class="card background-box"><h2>Essential information</h2><div class="info-fields">'+content+'</div></section>';
 }
@@ -225,7 +241,9 @@ if(decision){
   const ref=$('refs');ref.ontoggle=()=>{state.references=ref.open};
 }}
 function edited(){state.saved=false;if($('savestatus'))$('savestatus').textContent=''}
-$('app').addEventListener('input',e=>{const el=e.target,id=el.id;let m;if((m=/^name([01])$/.exec(id))){state.names[+m[1]]=el.value}else if(infoFields.some(([key])=>key===id)){state[id]=el.value}else if((m=/^(text|extra)([01])$/.exec(id))){(m[1]==='text'?state.original:state.draft)[+m[2]]=el.value;$('count-'+id).textContent=el.value.length+' / 3000';el.removeAttribute('aria-invalid');if($('warn'))$('warn').textContent=''}else if((m=/^dim([0-3])$/.exec(id))){state.values[+m[1]]=el.value;edited();
+$('app').addEventListener('input',e=>{const el=e.target,id=el.id;let m;if((m=/^name([01])$/.exec(id))){state.names[+m[1]]=el.value}else if(infoFields.some(([key])=>key===id)){state[id]=el.value;if(id==='relationship'){
+  document.querySelectorAll('[data-relationship]').forEach(b=>b.setAttribute('aria-pressed',String(relationships[b.dataset.relationship].toLowerCase()===el.value.trim().toLowerCase())));
+}}else if((m=/^(text|extra)([01])$/.exec(id))){(m[1]==='text'?state.original:state.draft)[+m[2]]=el.value;$('count-'+id).textContent=el.value.length+' / 3000';el.removeAttribute('aria-invalid');if($('warn'))$('warn').textContent=''}else if((m=/^dim([0-3])$/.exec(id))){state.values[+m[1]]=el.value;edited();
 const hints=userGuidance();
 $('user-chart').innerHTML=hints.chart;$('result-hint').innerHTML=hints.result;$('suggestion-hint').innerHTML=hints.suggestion}else if(id==='finalChoice'){state.final=el.value;edited()}else if(id==='suggestion'||id==='note'){state[id]=el.value;edited()}});
 function clearVotes(){state.panels={ai:[true,true],self:[true,true]};state.suggestion='';state.values=['','','',''];state.note='';state.saved=false;state.final='';state.references=false}
@@ -240,7 +258,16 @@ window.addEventListener?.('pagehide',persist);
 async function analyze(from){returnPage=from;const active=new AbortController();controller=active;const extras=from==='context'?state.draft:state.extra;const pair=state.original.map((s,i)=>[s.trim(),extras[i].trim()].filter(Boolean).join('\n'));go('process');let timeout;try{await new Promise(r=>setTimeout(r,100));if(active.signal.aborted)return;
 const result=await Promise.race([review(pair,active.signal,sharedInfo()),new Promise(resolve=>{timeout=setTimeout(()=>resolve(localReview(pair,sharedInfo())),18000)})]);if(active.signal.aborted)return;
 state.previous=from==='context'?state.report:null;state.report=result;state.extra=[...extras];analyzedOriginal=comparisonKey();state.saved=false;go('analysis');}catch(error){if(!active.signal.aborted){go(from);$('live').textContent='The review was interrupted. Please try again.'}}finally{clearTimeout(timeout);active.abort();if(controller===active)controller=null}}
-$('app').addEventListener('click',async e=>{const button=e.target.closest('button[data-action]');if(!button)return;switch(button.dataset.action){
+$('app').addEventListener('click',async e=>{const chip=e.target.closest('[data-relationship]');
+if(chip){const field=$('relationship');field.value=relationships[chip.dataset.relationship];field.dispatchEvent(new Event('input',{bubbles:true}));return;}
+const button=e.target.closest('button[data-action]');if(!button)return;switch(button.dataset.action){
+case 'use-sentence':{
+  const field=$('background');
+  const sentence='We '+$('phrase0').value+' because '+$('phrase1').value+'.';
+  if(field.value.trim() && field.value!==sentence && !confirm('Replace the background with this sentence?'))return;
+  field.value=sentence;field.dispatchEvent(new Event('input',{bubbles:true}));
+  button.closest('details').open=false;field.focus();break;
+}
 case 'portrait0':case 'portrait1':{
   const side=Number(button.dataset.action.slice(-1));
   Portraits.open(side,state.portraits[side],selection=>{
@@ -284,9 +311,34 @@ restore();go(state.page,false);
 const stage = document.getElementById('avatar-slot');
 const viewer = stage.querySelector('spline-viewer');
 viewer.addEventListener('load-complete', () => {
-  // The exported scene includes a mesh underneath the character.
-  const floor = viewer._spline?.findObjectByName('Floor');
-  if (floor) floor.visible = false;
+  // Keep the character and its animated speech, without the editor-style tracking marker.
+  for (const name of ['Floor', 'Cursor Target']) {
+    const object = viewer._spline?.findObjectByName(name);
+    if (object) object.visible = false;
+  }
+  // Mirror the authored bubble timing with browser-rendered type at every pixel density.
+  const lines = [
+    ['Message', '♥'],
+    ['Message 2', 'Justice is the shield of the law.'],
+    ['Message 3', 'Order in the court. We are now in session.']
+  ].map(([name, text]) => ({mesh: viewer._spline?.findObjectByName(name), text}));
+  if (lines.every(line => line.mesh)) {
+    const caption = $('avatar-message');
+    stage.classList.add('has-caption');
+    let frame;
+    function syncCaption() {
+      const active = lines.reduce((best,line) => line.mesh.scale.x > best.mesh.scale.x ? line : best);
+      const opacity = Math.min(1,Math.max(0,(active.mesh.scale.x-.12)/.7));
+      if (caption.textContent !== active.text) caption.textContent = active.text;
+      caption.style.opacity = String(opacity);
+      frame = requestAnimationFrame(syncCaption);
+    }
+    const observer = new IntersectionObserver(([entry]) => {
+      cancelAnimationFrame(frame);
+      if (entry.isIntersecting) syncCaption();
+    });
+    observer.observe(stage);
+  }
   stage.classList.add('ready');
 });
 import('https://cdn.spline.design/@splinetool/viewer@2.0.75/build/spline-viewer.js').catch(() => {
