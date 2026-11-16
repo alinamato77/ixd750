@@ -96,12 +96,11 @@ const raw=await session.prompt(task,{signal});const result=JSON.parse(raw.replac
 
 const $=id=>document.getElementById(id);
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-const state={page:'home',relationship:'',background:'',names:['',''],suggestion:'',original:['',''],extra:['',''],draft:['',''],report:null,previous:null,values:['','','',''],final:'',note:'',saved:false,panels:{ai:[true,true],self:[true,true]},references:false};
+const state={page:'home',relationship:'',background:'',names:['',''],portraits:Portraits.initial(),suggestion:'',original:['',''],extra:['',''],draft:['',''],report:null,previous:null,values:['','','',''],final:'',note:'',saved:false,panels:{ai:[true,true],self:[true,true]},references:false};
 let controller=null,returnPage='home';
 const copy={home:['Two sides, one story.','Put both perspectives side by side. You decide how much help you want.','01 / 03   Perspectives'],process:['Reading both sides.','You can return to your text at any time.','02 / 03   Review'],analysis:['The comparison.','Read the accounts, add missing context, then choose who judges first.','02 / 03   Review'],context:['A little more context.','Add what each side would like the other to know.','02 / 03   Review'],ai:['AI’s judgment.','Review how the two accounts were assessed and the next step suggested.','03 / 03   Decision'],self:['Your judgment.','Weigh each dimension, choose your result, and write what you think should happen next.','03 / 03   Decision']};
 function go(page,focus=true){state.page=page;const [title,intro,step]=copy[page];$('title').textContent=title;$('intro').textContent=intro;$('step').textContent=step;render();if(focus){$('title').focus({preventScroll:true});window.scrollTo(0,0)}}
 function act(id,label,css=''){return '<button type="button" class="'+css+'" data-action="'+id+'">'+label+'</button>'}
-function badge(i,extra=false){return '<span class="tag '+(i?'bside':'')+'">'+('AB'[i])+(extra?'+':'')+'</span>'}
 function partyLabel(i) {
   const party = 'Party ' + 'AB'[i];
   const name = state.names[i].trim();
@@ -119,8 +118,8 @@ function card(i,mode) {
   const value = extra ? (writing ? state.draft[i] : state.extra[i]) : state.original[i];
   const id = (extra ? 'extra' : 'text') + i;
   const title = mode === 'write' ? 'Party ' + side : partyLabel(i);
-  const heading = '<div class="cardhead">' + badge(i,extra) + '<span class="party-label">' + esc(title) + (extra ? ' · Additional context' : '') + '</span></div>';
-  const nameField = mode === 'write' ? '<label class="label" for="name' + i + '">Name (optional)</label><input class="party-name" id="name' + i + '" aria-label="Party ' + side + ' name (optional)" maxlength="80" value="' + esc(state.names[i]) + '">' : '';
+  const heading = '<div class="cardhead">' + Portraits.badge(state.portraits[i],i,mode==='write') + '<span class="party-label">' + esc(title) + (extra ? ' · Additional context' : '') + '</span></div>';
+  const nameField = mode === 'write' ? '<label class="label" for="name' + i + '">Name</label><input class="party-name" id="name' + i + '" aria-label="Party ' + side + ' name" maxlength="80" value="' + esc(state.names[i]) + '">' : '';
   const account = writing ? '<label class="label" for="' + id + '">' + (extra ? 'Additional context' : 'Perspective') + '</label><textarea class="statement" id="' + id + '" aria-label="Party ' + side + (extra ? ' additional context' : ' perspective') + '" maxlength="3000" placeholder="' + (extra ? 'What else matters here?' : 'Paste or write Party ' + side + '’s account…') + '">' + esc(value) + '</textarea><span class="counter" aria-hidden="true" id="count-' + id + '">' + value.length + ' / 3000</span>' : '<p class="ref" dir="auto">' + esc(value || 'No added context.') + '</p>';
   return '<div class="card ' + (extra ? 'extra ' : '') + (i ? 'b' : 'a') + (extra ? 'extra' : 'card') + '">' + heading + nameField + account + '</div>';
 }
@@ -140,7 +139,7 @@ function backgroundBox(editable=false){
     const caption='<label for="'+key+'">'+label+'</label>';
     const field=key==='relationship'
       ? '<input id="'+key+'" maxlength="150" placeholder="'+hint+'" value="'+esc(state[key])+'">'
-      : '<textarea id="'+key+'" rows="2" maxlength="1500" placeholder="'+hint+'">'+esc(state[key])+'</textarea>';
+      : '<textarea id="'+key+'" rows="1" maxlength="1500" placeholder="'+hint+'">'+esc(state[key])+'</textarea>';
     return '<div>'+caption+field+'</div>';
   }).join('');
   return '<section class="card background-box"><h2>Essential information</h2><div class="info-fields">'+content+'</div></section>';
@@ -242,6 +241,16 @@ async function analyze(from){returnPage=from;const active=new AbortController();
 const result=await Promise.race([review(pair,active.signal,sharedInfo()),new Promise(resolve=>{timeout=setTimeout(()=>resolve(localReview(pair,sharedInfo())),18000)})]);if(active.signal.aborted)return;
 state.previous=from==='context'?state.report:null;state.report=result;state.extra=[...extras];analyzedOriginal=comparisonKey();state.saved=false;go('analysis');}catch(error){if(!active.signal.aborted){go(from);$('live').textContent='The review was interrupted. Please try again.'}}finally{clearTimeout(timeout);active.abort();if(controller===active)controller=null}}
 $('app').addEventListener('click',async e=>{const button=e.target.closest('button[data-action]');if(!button)return;switch(button.dataset.action){
+case 'portrait0':case 'portrait1':{
+  const side=Number(button.dataset.action.slice(-1));
+  Portraits.open(side,state.portraits[side],selection=>{
+    state.portraits[side]=selection;
+    button.outerHTML=Portraits.badge(selection,side,true);
+    document.querySelector('[data-action="portrait'+side+'"]').focus({preventScroll:true});
+    persist();
+  });
+  break;
+}
 case 'example0':case 'example1':{
   const item=cases[Number(button.dataset.action.slice(-1))];
   if((Object.values(sharedInfo()).some(Boolean)||state.names.some(s=>s.trim())||state.original.some(s=>s.trim()))&&!confirm('Replace this comparison with “'+item.name+'”?'))return;
@@ -268,7 +277,7 @@ case 'save':{
   }
   state.saved=true;$('savestatus').textContent='Saved for this session. You can still change your view.';break;
 }
-case 'new':if(!confirm('Start over and clear this comparison?'))return;for(const [key] of infoFields)state[key]='';state.names=['',''];state.original=['',''];state.extra=['',''];state.draft=['',''];state.report=null;state.previous=null;analyzedOriginal='';clearVotes();go('home');break}
+case 'new':if(!confirm('Start over and clear this comparison?'))return;for(const [key] of infoFields)state[key]='';state.names=['',''];state.portraits=Portraits.initial();state.original=['',''];state.extra=['',''];state.draft=['',''];state.report=null;state.previous=null;analyzedOriginal='';clearVotes();go('home');break}
 });
 restore();go(state.page,false);
 
