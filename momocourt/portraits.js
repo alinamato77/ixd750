@@ -36,9 +36,6 @@ const Portraits = (() => {
   function sprite(shape) {
     return '<span class="portrait-sprite" aria-hidden="true" style="--x:'+(shape%4)*100/3+'%;--y:'+Math.floor(shape/4)*20+'%"></span>';
   }
-  function inline(selection) {
-    return '<span class="inline-portrait" aria-hidden="true" style="'+tint(selection.tone)+'">'+sprite(selection.shape)+'</span>';
-  }
   const camera = '<span class="camera-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 7h4l2-3h6l2 3h4v13H3z"/><circle cx="12" cy="13" r="3.3"/></svg></span>';
   function badge(selection, side, editable) {
     const inside = sprite(selection.shape)+(editable?camera:'');
@@ -46,6 +43,11 @@ const Portraits = (() => {
     return editable
       ? '<button type="button"'+style+' data-action="portrait'+side+'" aria-label="Choose portrait for Party '+('AB'[side])+'">'+inside+'</button>'
       : '<span'+style+' role="img" aria-label="'+shapes[selection.shape]+' portrait">'+inside+'</span>';
+  }
+
+  // Small, decorative portrait that follows a party label in running text (the label carries the meaning).
+  function mini(selection) {
+    return '<span class="party-portrait mini" aria-hidden="true" style="'+tint(selection.tone)+'">'+sprite(selection.shape)+'</span>';
   }
 
   const dialog = document.querySelector('#portrait-dialog');
@@ -80,5 +82,5 @@ const Portraits = (() => {
     update();dialog.showModal();dialog.querySelector('.portrait-scroll').scrollTop=0;
     grid.children[draft.shape].focus({preventScroll:true});
   }
-  return {initial,badge,inline,open};
+  return {initial,badge,mini,open};
 })();
