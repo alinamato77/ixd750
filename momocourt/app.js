@@ -949,6 +949,23 @@ const Avatar=(()=>{
     if(document.hidden){clearTimeout(idleTimer);clearTimeout(pageTimer);hideBubble();spline()?.stop?.()}
     else{spline()?.play?.();scheduleIdle()}
   });
+  // Framing per page. Start (no wig): the original framing, Momo a little low. Pages 01–04: the camera moves in and
+  // Momo up so the orb fills the wig's opening (diameter half the wig's width, top at ~29% of its height). The wig's
+  // CSS stays tied to the canvas box, so this holds at every canvas size.
+  const FRAMES={start:{dz:0,dy:-60},wig:{dz:-48,dy:17}};
+  let shot=null,shotRaf=0;
+  function frameFor(name,instant){
+    if(!shot)return;
+    const f=name==='start'?FRAMES.start:FRAMES.wig,to={z:shot.z+f.dz,y:shot.y+f.dy};
+    cancelAnimationFrame(shotRaf);
+    const from={z:shot.camera.position.z,y:shot.robot.position.y},t0=performance.now(),ms=instant||reduce.matches?0:320;
+    const step=now=>{
+      const k=ms?Math.min(1,(now-t0)/ms):1,e=1-Math.pow(1-k,3);
+      shot.camera.position.z=from.z+(to.z-from.z)*e;shot.robot.position.y=from.y+(to.y-from.y)*e;
+      spline()?.requestRender?.();if(k<1)shotRaf=requestAnimationFrame(step);
+    };
+    step(performance.now());
+  }
   function ready(){
     const app=spline();if(!app||roamer.classList.contains('ready'))return;
     // Hide the floor, the tracking marker and the baked 3D text: speech is rendered in HTML.
@@ -960,6 +977,7 @@ const Avatar=(()=>{
     // on the Robot instead of moving the Robot; otherwise Momo sits left of the title.
     if(camera&&robot){camera.position.x=robot.position.x;robot.position.y=camera.position.y-60}
     app.setZoom?.(AVATAR_ZOOM);
+    if(camera&&robot)shot={camera,robot,z:camera.position.z,y:camera.position.y};
     // Switch off the scene's own cursor follow (it slides the Robot out of this small canvas); look() turns the head.
     app.setGlobalEvents?.(false);
     parts=[['Helmet',TURN.helmet],['Eyes',TURN.eyes]].flatMap(([n,t])=>(app.getAllObjects?.()||[]).filter(o=>o.name===n).map(o=>({o,t,x:o.rotation.x,y:o.rotation.y})));
@@ -968,6 +986,7 @@ const Avatar=(()=>{
     const page=app._scene?.activePage,bg=page?.bgColor;
     if(bg&&'a' in bg&&typeof page.setBackgroundColor==='function'){page.setBackgroundColor(new bg.constructor(0,0,0,0));app.requestRender?.()}
     else app.setBackgroundColor?.('rgba(0,0,0,0)');
+    frameFor(state.page,true);
     roamer.classList.add('ready');
   }
   if(window.momoSpline)ready();else addEventListener('momo-ready',ready,{once:true});
@@ -978,6 +997,7 @@ const Avatar=(()=>{
   hair(state.hasHair);
   if(hidden)applyHidden();else scheduleIdle();
   return {hair,page(name){
+    frameFor(name);
     if(name!=='start')targetY=0;travelTo(targetX);
     hair(state.hasHair);clearTimeout(pageTimer);hideBubble();
     if(!hidden)pageTimer=setTimeout(()=>say(lines[name]||'…'),reduce.matches?0:450);
