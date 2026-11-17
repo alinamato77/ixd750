@@ -6,48 +6,6 @@ const DIMS=[
  ['Consideration','Who takes the other person’s situation into account?']
 ];
 const choices=['Side A','Side B','Both equally','Not enough context'];
-const cases = [
-  {
-    name: 'Identical ice cream',
-    relationship: 'Roommates',
-    background: 'They share a freezer. Each bought a tub of the same brand and flavor of ice cream.',
-    sides: [
-      'I saw B eating the exact ice cream I buy. I thought it was mine. I want a heads-up before anyone eats my food. When B said she bought the same flavor, I wondered why she was copying me. I’m still upset that she didn’t apologize.',
-      'I bought that brand and flavor because I like it too. I ate from the tub I believed was mine. It hurt to be accused of taking her food and then of copying her. I’d like her to ask me what happened before expecting an apology.'
-    ],
-    keywords: ['unresolved','ask others to check','same flavor'],
-    steps: ['Acknowledge that matching flavors alone cannot identify the tub, and apologize for jumping to a conclusion.', 'Explain which tub you thought was yours. If you discover you took A’s, offer to replace it.', 'Check the tubs together. If ownership is still unclear, leave it open and label the lids with your initials.'],
-    issue: 'The tubs look identical. Can either roommate identify the one B opened?',
-    readings: [
-      ['Not enough context', 'Both bought the same ice cream. Seeing B eat that flavor does not identify the tub.', 0, 0],
-      ['Side B', 'B’s own purchase offers another explanation for what A saw. The shared flavor alone does not establish copying or taking.', 1, 0],
-      ['Not enough context', 'A states a boundary. The accounts do not establish an earlier agreement or whose tub was opened.', 2, 1],
-      ['Not enough context', 'A wants her belongings respected. B wants to be asked before being blamed. Both concerns can be acknowledged.', 2, 2]
-    ],
-    overall: 'Whose tub B opened is unresolved. A can ask others to check before taking her food, and B can choose the same flavor.',
-    solution: 'A could say, “I care about people asking before taking my food. I jumped to a conclusion, and I’m sorry I accused you.” Check the tubs together. If B realizes she opened A’s, she can apologize and replace it. If they still cannot tell, leave ownership unresolved and put initials on the lids next time.'
-  },
-  {
-    name: 'The grocery split',
-    relationship: 'Roommates',
-    background: 'One receipt lists $18 in cleaning supplies and $12 in coffee for A. They agreed by text to split shared cleaning supplies equally and pay for personal groceries separately.',
-    sides: [
-      'I paid the $30 bill and asked B for $15. I picked everything up in one trip, so splitting the receipt in half felt simple. I can show B the itemized receipt.',
-      'We agreed to split the cleaning supplies. I don’t drink the coffee A bought for herself. I’m happy to send $9 for my half of the supplies.'
-    ],
-    keywords: ['$9','$12','personal coffee'],
-    steps: ['Show the itemized receipt and separate the $12 coffee from the shared supplies.', 'Pay $9 for half of the $18 in shared supplies. If you already sent $15, ask for the $6 difference.', 'Mark shared items before splitting the next receipt, so each roommate can check the total.'],
-    issue: 'Should they split the whole receipt or only the cleaning supplies covered by their agreement?',
-    readings: [
-      ['Side B', 'The shared receipt details support B’s calculation: half of $18 is $9.', 0, 2],
-      ['Side B', 'Halving the total is convenient, but includes $6 for A’s personal coffee in B’s share.', 1, 1],
-      ['Side B', 'Their earlier text sets the rule: shared supplies are split and personal groceries are paid for individually.', 1, 0],
-      ['Both equally', 'A offers to show the receipt and B offers to pay for the shared items. Both offers can help settle the amount.', 2, 2]
-    ],
-    overall: 'Under the stated agreement, B owes $9. A’s share is the other $9 for supplies plus $12 for coffee.',
-    solution: 'Look at the receipt together and mark the two categories. B sends A $9. If B already sent $15, A returns $6. On the next shared shop, total the shared items before dividing by two.'
-  }
-];
 function localSteps(){
   return [
     'Name the specific event behind your concern and ask B to clarify one detail.',
@@ -99,8 +57,8 @@ function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
 const state={page:'home',relationship:'',background:'',names:['',''],portraits:Portraits.initial(),suggestion:'',original:['',''],extra:['',''],draft:['',''],report:null,previous:null,values:['','','',''],final:'',note:'',saved:false,panels:{ai:[true,true],self:[true,true]},references:false};
 let controller=null,returnPage='home';
 const copy={home:['Two sides, one story.','Put both perspectives side by side. You decide how much help you want.','01 / 03   Perspectives'],process:['Reading both sides.','You can return to your text at any time.','02 / 03   Review'],analysis:['The comparison.','Read the accounts, add missing context, then choose who judges first.','02 / 03   Review'],context:['A little more context.','Add what each side would like the other to know.','02 / 03   Review'],ai:['AI’s judgment.','Review how the two accounts were assessed and the next step suggested.','03 / 03   Decision'],self:['Your judgment.','Weigh each dimension, choose your result, and write what you think should happen next.','03 / 03   Decision']};
-function go(page,focus=true){state.page=page;const [title,intro,step]=copy[page];$('title').textContent=title;$('intro').textContent=intro;$('step').textContent=step;render();if(focus){$('title').focus({preventScroll:true});window.scrollTo(0,0)}}
-function act(id,label,css=''){return '<button type="button" class="'+css+'" data-action="'+id+'">'+label+'</button>'}
+function go(page,focus=true){state.page=page;const [title,intro,step]=copy[page];$('title').textContent=title;$('intro').textContent=intro;$('step').textContent=step;render();Avatar.page(page);if(focus){$('title').focus({preventScroll:true});window.scrollTo(0,0)}}
+function act(id,label,css='',extra=''){return '<button type="button" class="'+css+'" data-action="'+id+'"'+extra+'>'+label+'</button>'}
 function partyLabel(i) {
   const party = 'Party ' + 'AB'[i];
   const name = state.names[i].trim();
@@ -221,21 +179,22 @@ function resultInput(){
 }
 function decisionPage(page,report){
   const ai=page==='ai';
-  const judgments=ai?'<p class="sub">'+esc(report.engine)+'</p>'+report.rows.map(metricAI).join(''):dimensionInputs();
-  const result=ai?'<div class="metric"><h3>Result</h3>'+resultsBar(report.rows.map(row=>row.pick))+'<p>'+emphasize(report.overall,report.keywords)+'</p></div><div class="metric"><h3>Suggestion</h3>'+stepsMarkup(report)+'</div>':resultInput();
+  const confirmed=ai&&Testimony.ensure().confirmed;
+  const judgments=ai?'<div id="review-left">'+Testimony.left()+'</div>'+(confirmed?'<p class="sub">'+esc(report.engine)+'</p>'+report.rows.map(metricAI).join(''):''):dimensionInputs();
+  const result=ai?'<div id="review-right">'+Testimony.right()+'</div>'+(confirmed?'<div class="metric"><h3>Result</h3>'+resultsBar(report.rows.map(row=>row.pick))+'<p>'+emphasize(report.overall,report.keywords)+'</p></div><div class="metric"><h3>Suggestion</h3>'+stepsMarkup(report)+'</div>':''):resultInput();
   const columns=[['Judgment',judgments],['Result &amp; suggestion',result]].map(([label,body],i)=>
     '<details class="fold" id="column'+i+'" '+(state.panels[page][i]?'open':'')+'><summary>'+label+'</summary><div class="inner">'+body+'</div></details>').join('');
   return '<details class="fold smallref" id="refs" '+(state.references?'open':'')+'><summary>Original accounts</summary>'+backgroundBox()+cards('read',state.extra.some(Boolean))+'</details>'+
     '<div class="grid folds">'+columns+'</div><div class="actions">'+act('back','← Back to comparison','link push')+act(ai?'self':'ai',ai?'Make my own judgment':'View AI’s judgment')+'</div><div class="actions">'+act('new','Start a new comparison','link')+'</div>';
 }
 function render(){const p=state.page,report=state.report;let html='';
-if(p==='home')html='<div class="examples"><span>Try a sample</span>'+cases.map((item,i)=>act('example'+i,esc(item.name),'link')).join('')+'</div>'+backgroundBox(true)+'<div class="section-head"><h2>Perspectives</h2></div>'+cards('write')+'<div class="actions"><span id="warn" class="msg push" role="alert"></span>'+act('compare','Compare perspectives &nbsp;→','primary')+'</div>';
+if(p==='home')html='<div class="examples"><span>Try a sample</span>'+cases.map((item,i)=>act('load-example',esc(item.name),'link',' data-example="'+i+'"')).join('')+'</div>'+backgroundBox(true)+'<div class="section-head"><h2>Perspectives</h2></div>'+cards('write')+'<div class="actions"><span id="warn" class="msg push" role="alert"></span>'+act('compare','Compare perspectives &nbsp;→','primary')+'</div>';
 if(p==='process')html=backgroundBox()+cards('read',false)+'<div class="busy" aria-live="polite">Comparing the two accounts…<br>'+act('cancel','Back to editing','link')+'</div>';
 if(p==='analysis'){const before=state.previous;const changed=before?DIMS.filter((_,i)=>JSON.stringify(report.rows[i])!==JSON.stringify(before.rows[i])).map(d=>d[0]):[];html=backgroundBox()+cards('read',state.extra.some(Boolean))+'<section class="panel"><div class="section-head"><h2>What’s in question?</h2><span class="sub">'+esc(report.engine)+'</span></div><p>'+esc(report.summary)+'</p>'+(!report.engine.startsWith('On-device')?[0,1].map(i=>'<blockquote class="quote '+(i?'bquote':'')+'">'+esc(partyLabel(i))+' · “<span dir="auto">'+esc(segments(state.original[i])[0])+'</span>”</blockquote>').join(''):'')+(before?'<p class="sub">'+(changed.length?'Updated dimensions · '+changed.join(', '):'Reviewed again. The dimension readings are unchanged.')+'</p>':'')+'</section><div class="actions">'+act('context',state.extra.some(Boolean)?'Edit added context':'Add context','link push')+act('ai','Show AI’s judgment')+act('self','Judge for myself &nbsp;→','primary')+'</div><div class="actions">'+act('edit','Edit original accounts','link push')+'</div>'}
 if(p==='context')html=backgroundBox()+cards('context',true)+'<div class="actions">'+act('discard','Back to comparison','link push')+act('update','Update analysis &nbsp;→','primary')+'</div>';
 const decision=p==='ai'||p==='self';
 if(decision)html=decisionPage(p,report);
-$('app').className='module '+(decision||p==='context'||(p==='analysis'&&state.extra.some(Boolean))?'wide':'');$('app').innerHTML=html;
+$('app').className='module '+(decision||p==='context'||(p==='analysis'&&state.extra.some(Boolean))?'wide':'');$('app').innerHTML=html;if(p==='ai')Testimony.start();
 if(decision){
   [0,1].forEach(i=>{const panel=$('column'+i);panel.ontoggle=()=>{state.panels[p][i]=panel.open}});
   const ref=$('refs');ref.ontoggle=()=>{state.references=ref.open};
@@ -246,7 +205,7 @@ $('app').addEventListener('input',e=>{const el=e.target,id=el.id;let m;if((m=/^n
 }}else if((m=/^(text|extra)([01])$/.exec(id))){(m[1]==='text'?state.original:state.draft)[+m[2]]=el.value;$('count-'+id).textContent=el.value.length+' / 3000';el.removeAttribute('aria-invalid');if($('warn'))$('warn').textContent=''}else if((m=/^dim([0-3])$/.exec(id))){state.values[+m[1]]=el.value;edited();
 const hints=userGuidance();
 $('user-chart').innerHTML=hints.chart;$('result-hint').innerHTML=hints.result;$('suggestion-hint').innerHTML=hints.suggestion}else if(id==='finalChoice'){state.final=el.value;edited()}else if(id==='suggestion'||id==='note'){state[id]=el.value;edited()}});
-function clearVotes(){state.panels={ai:[true,true],self:[true,true]};state.suggestion='';state.values=['','','',''];state.note='';state.saved=false;state.final='';state.references=false}
+function clearVotes(){Testimony.reset();state.panels={ai:[true,true],self:[true,true]};state.suggestion='';state.values=['','','',''];state.note='';state.saved=false;state.final='';state.references=false}
 let analyzedOriginal='';
 const storageKey='both-sides-review-v1';
 function persist(){try{sessionStorage.setItem(storageKey,JSON.stringify({state,analyzedOriginal}))}catch{}}
@@ -278,8 +237,8 @@ case 'portrait0':case 'portrait1':{
   });
   break;
 }
-case 'example0':case 'example1':{
-  const item=cases[Number(button.dataset.action.slice(-1))];
+case 'load-example':{
+  const item=cases[Number(button.dataset.example)];
   if((Object.values(sharedInfo()).some(Boolean)||state.names.some(s=>s.trim())||state.original.some(s=>s.trim()))&&!confirm('Replace this comparison with “'+item.name+'”?'))return;
   for(const [key] of infoFields)state[key]=item[key];
   state.names=['',''];state.original=[...item.sides];state.extra=['',''];state.draft=['',''];
@@ -307,40 +266,3 @@ case 'save':{
 case 'new':if(!confirm('Start over and clear this comparison?'))return;for(const [key] of infoFields)state[key]='';state.names=['',''];state.portraits=Portraits.initial();state.original=['',''];state.extra=['',''];state.draft=['',''];state.report=null;state.previous=null;analyzedOriginal='';clearVotes();go('home');break}
 });
 restore();go(state.page,false);
-
-const stage = document.getElementById('avatar-slot');
-const viewer = stage.querySelector('spline-viewer');
-viewer.addEventListener('load-complete', () => {
-  // Keep the character and its animated speech, without the editor-style tracking marker.
-  for (const name of ['Floor', 'Cursor Target']) {
-    const object = viewer._spline?.findObjectByName(name);
-    if (object) object.visible = false;
-  }
-  // Mirror the authored bubble timing with browser-rendered type at every pixel density.
-  const lines = [
-    ['Message', '♥'],
-    ['Message 2', 'Justice is the shield of the law.'],
-    ['Message 3', 'Order in the court. We are now in session.']
-  ].map(([name, text]) => ({mesh: viewer._spline?.findObjectByName(name), text}));
-  if (lines.every(line => line.mesh)) {
-    const caption = $('avatar-message');
-    stage.classList.add('has-caption');
-    let frame;
-    function syncCaption() {
-      const active = lines.reduce((best,line) => line.mesh.scale.x > best.mesh.scale.x ? line : best);
-      const opacity = Math.min(1,Math.max(0,(active.mesh.scale.x-.12)/.7));
-      if (caption.textContent !== active.text) caption.textContent = active.text;
-      caption.style.opacity = String(opacity);
-      frame = requestAnimationFrame(syncCaption);
-    }
-    const observer = new IntersectionObserver(([entry]) => {
-      cancelAnimationFrame(frame);
-      if (entry.isIntersecting) syncCaption();
-    });
-    observer.observe(stage);
-  }
-  stage.classList.add('ready');
-});
-import('https://cdn.spline.design/@splinetool/viewer@2.0.75/build/spline-viewer.js').catch(() => {
-  stage.classList.remove('ready');
-});
