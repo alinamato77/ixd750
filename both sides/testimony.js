@@ -76,7 +76,7 @@ const Testimony = (() => {
     const t=ensure();
     return '<section class="reading metric"><h3>Read the testimony</h3><p class="sub">'+esc(t.engine)+' · '+(t.confirmed?'Confirmed by you':'Suggested labels')+'</p><p>'+(t.confirmed?'Your confirmed labels determine each account’s balance.':'Select a highlighted passage to change its label or split it. Confirm both accounts when they read accurately.')+'</p>'+
       '<ul class="reading-key">'+Object.entries(labels).map(([k,v])=>'<li class="tone-'+k+'">'+v+'</li>').join('')+'</ul>'+
-      t.groups.map((group,i)=>'<section class="reading-side"><h4>'+esc(partyLabel(i))+'</h4><div class="passages" dir="auto">'+group.map((r,j)=>{
+      t.groups.map((group,i)=>'<section class="reading-side"><h4>'+partyIdentity(i)+'</h4><div class="passages" dir="auto">'+group.map((r,j)=>{
         const label=labels[r.tag],txt=esc(r.text);
         return t.confirmed?'<mark class="tone-'+r.tag+'" title="'+label+'"><span class="sr">'+label+' · </span>'+txt+'</mark>':'<button type="button" class="tone-'+r.tag+'" data-reading="piece-'+i+'-'+j+'" aria-label="'+esc(label+' · '+r.text)+'" aria-expanded="'+(editor?.side===i&&editor.index===j)+'">'+txt+'</button>';
       }).join('')+'</div>'+(!t.confirmed&&editor?.side===i?editBox(group[editor.index],i):'')+'</section>').join('')+
@@ -88,7 +88,7 @@ const Testimony = (() => {
   function bar(group,i) {
     const {e,r,u,p}=counts(group);
     const summary=p===null?'No scored passages':p+'% emotion · '+(100-p)+'% event / reasoning';
-    return '<div class="reading-balance"><strong>'+esc(partyLabel(i))+'</strong><p>'+summary+'</p>'+(p===null?'':'<div class="reading-bar" aria-hidden="true"><i style="width:'+p+'%"></i></div>')+'<small>'+e+' emotion · '+r+' event / reasoning · '+u+' excluded</small></div>';
+    return '<div class="reading-balance"><strong>'+partyIdentity(i)+'</strong><p>'+summary+'</p>'+(p===null?'':'<div class="reading-bar" aria-hidden="true"><i style="width:'+p+'%"></i></div>')+'<small>'+e+' emotion · '+r+' event / reasoning · '+u+' excluded</small></div>';
   }
   function quote(row) {return '“'+esc(row.text.trim())+'”'}
   function guidance(group,i,route) {
@@ -104,7 +104,7 @@ const Testimony = (() => {
       const step='Compare '+quote(reason)+' with the other person’s account.';
       if(route==='event')pieces.unshift(step);else pieces.push(step);
     }
-    return '<p><strong>'+esc(partyLabel(i))+'</strong> '+pieces.join(' ')+'</p>';
+    return '<p><strong>'+partyIdentity(i)+'</strong> '+pieces.join(' ')+'</p>';
   }
   function right() {
     const t=ensure();

@@ -64,6 +64,13 @@ function partyLabel(i) {
   const name = state.names[i].trim();
   return name ? party + ' · ' + name : party;
 }
+function partyIdentity(side, label=partyLabel(side)) {
+  return '<span class="party-identity"><span>'+esc(label)+'</span>'+Portraits.inline(state.portraits[side])+'</span>';
+}
+function choiceMarkup(value) {
+  const side=choices.indexOf(value);
+  return side===0 || side===1 ? partyIdentity(side) : esc(choiceLabel(value));
+}
 function choiceLabel(value) {
   if (value === choices[0]) return partyLabel(0);
   if (value === choices[1]) return partyLabel(1);
@@ -75,15 +82,14 @@ function card(i,mode) {
   const writing = mode === 'write' || mode === 'extra';
   const value = extra ? (writing ? state.draft[i] : state.extra[i]) : state.original[i];
   const id = (extra ? 'extra' : 'text') + i;
-  const title = mode === 'write' ? 'Party ' + side : partyLabel(i);
-  const heading = '<div class="cardhead">' + Portraits.badge(state.portraits[i],i,mode==='write') + '<span class="party-label">' + esc(title) + (extra ? ' · Additional context' : '') + '</span></div>';
+  const heading = '<div class="cardhead"><span class="party-label" '+(writing && !extra ? 'id="party-title'+i+'"' : '')+'>'+esc(partyLabel(i))+(extra?' · Additional context':'')+'</span>'+Portraits.badge(state.portraits[i],i,mode==='write')+'</div>';
   const nameField = mode === 'write' ? '<label class="label" for="name' + i + '">Name</label><input class="party-name" id="name' + i + '" aria-label="Party ' + side + ' name" maxlength="80" value="' + esc(state.names[i]) + '">' : '';
   const account = writing ? '<label class="label" for="' + id + '">' + (extra ? 'Additional context' : 'Perspective') + '</label><textarea class="statement" id="' + id + '" aria-label="Party ' + side + (extra ? ' additional context' : ' perspective') + '" maxlength="3000" placeholder="' + (extra ? 'What else matters here?' : 'Paste or write Party ' + side + '’s account…') + '">' + esc(value) + '</textarea><span class="counter" aria-hidden="true" id="count-' + id + '">' + value.length + ' / 3000</span>' : '<p class="ref" dir="auto">' + esc(value || 'No added context.') + '</p>';
   return '<div class="card ' + (extra ? 'extra ' : '') + (i ? 'b' : 'a') + (extra ? 'extra' : 'card') + '">' + heading + nameField + account + '</div>';
 }
 function cards(mode,showExtra=false){return '<div class="grid '+(showExtra?'contextgrid':mode==='write'?'compose':'readcards')+'">'+(showExtra?card(0,mode==='context'?'extra':'readextra'):'')+card(0,mode==='write'?'write':'read')+card(1,mode==='write'?'write':'read')+(showExtra?card(1,mode==='context'?'extra':'readextra'):'')+'</div>'}
 function pickSelect(id,value,label,klass=''){return '<select id="'+id+'" class="'+klass+'" aria-label="'+label+'"><option value="">Choose a view…</option>'+choices.map(c=>'<option value="'+esc(c)+'" '+(c===value?'selected':'')+'>'+esc(choiceLabel(c))+'</option>').join('')+'</select>'}
-function metricAI(r,i){return '<div class="metric"><h3>'+DIMS[i][0]+'</h3><p><strong>'+esc(choiceLabel(r.pick))+'</strong></p><p>'+esc(r.why)+'</p>'+[r.a,r.b].map((q,j)=>q?'<blockquote class="quote '+(j?'bquote':'')+'">'+esc(partyLabel(j))+' · “<span dir="auto">'+esc(q)+'</span>”</blockquote>':'').join('')+'</div>'}
+function metricAI(r,i){return '<div class="metric"><h3>'+DIMS[i][0]+'</h3><p><strong>'+choiceMarkup(r.pick)+'</strong></p><p>'+esc(r.why)+'</p>'+[r.a,r.b].map((q,j)=>q?'<blockquote class="quote '+(j?'bquote':'')+'">'+partyIdentity(j)+' · “<span dir="auto">'+esc(q)+'</span>”</blockquote>':'').join('')+'</div>'}
 const infoFields=[
   ['relationship','Relationship','How do A and B know each other?'],
   ['background','Background','What happened, in one sentence?']
@@ -142,7 +148,7 @@ function resultsBar(votes){
   const labels=[partyLabel(0),partyLabel(1),'Both equally','Insufficient context'];
   return '<figure class="result-chart"><figcaption>Judgment across four dimensions</figcaption><div class="result-track" aria-hidden="true">'+
     counts.map((count,i)=>count?'<span class="tone'+i+'" style="flex:'+count+'"></span>':'').join('')+
-    '</div><ul class="result-key">'+counts.map((n,i)=>'<li><i aria-hidden="true" class="tone'+i+'"></i>'+esc(labels[i])+' <strong>'+n+'/4</strong></li>').join('')+'</ul></figure>';
+    '</div><ul class="result-key">'+counts.map((n,i)=>'<li><i aria-hidden="true" class="tone'+i+'"></i>'+(i<2?partyIdentity(i):esc(labels[i]))+' <strong>'+n+'/4</strong></li>').join('')+'</ul></figure>';
 }
 function stepsFor(report){
   if(Array.isArray(report.steps)&&report.steps.length===3)return report.steps;
@@ -153,7 +159,7 @@ function stepsFor(report){
   return steps;
 }
 function stepsMarkup(report){
-  return stepsFor(report).map((text,i)=>'<p class="action-line"><strong>'+(i<2?esc(state.names[i].trim()||'Party '+'AB'[i])+' should':'Final suggestion')+'</strong> '+emphasize(text,report.keywords)+'</p>').join('');
+  return stepsFor(report).map((text,i)=>'<p class="action-line"><strong>'+(i<2?partyIdentity(i,state.names[i].trim()||'Party '+'AB'[i])+' should':'Final suggestion')+'</strong> '+emphasize(text,report.keywords)+'</p>').join('');
 }
 function userGuidance(){
   if(!state.values.every(v=>choices.includes(v)))return {chart:'',result:'',suggestion:''};
@@ -190,7 +196,7 @@ function decisionPage(page,report){
 function render(){const p=state.page,report=state.report;let html='';
 if(p==='home')html='<div class="examples"><span>Try a sample</span>'+cases.map((item,i)=>act('load-example',esc(item.name),'link',' data-example="'+i+'"')).join('')+'</div>'+backgroundBox(true)+'<div class="section-head"><h2>Perspectives</h2></div>'+cards('write')+'<div class="actions"><span id="warn" class="msg push" role="alert"></span>'+act('compare','Compare perspectives &nbsp;→','primary')+'</div>';
 if(p==='process')html=backgroundBox()+cards('read',false)+'<div class="busy" aria-live="polite">Comparing the two accounts…<br>'+act('cancel','Back to editing','link')+'</div>';
-if(p==='analysis'){const before=state.previous;const changed=before?DIMS.filter((_,i)=>JSON.stringify(report.rows[i])!==JSON.stringify(before.rows[i])).map(d=>d[0]):[];html=backgroundBox()+cards('read',state.extra.some(Boolean))+'<section class="panel"><div class="section-head"><h2>What’s in question?</h2><span class="sub">'+esc(report.engine)+'</span></div><p>'+esc(report.summary)+'</p>'+(!report.engine.startsWith('On-device')?[0,1].map(i=>'<blockquote class="quote '+(i?'bquote':'')+'">'+esc(partyLabel(i))+' · “<span dir="auto">'+esc(segments(state.original[i])[0])+'</span>”</blockquote>').join(''):'')+(before?'<p class="sub">'+(changed.length?'Updated dimensions · '+changed.join(', '):'Reviewed again. The dimension readings are unchanged.')+'</p>':'')+'</section><div class="actions">'+act('context',state.extra.some(Boolean)?'Edit added context':'Add context','link push')+act('ai','Show AI’s judgment')+act('self','Judge for myself &nbsp;→','primary')+'</div><div class="actions">'+act('edit','Edit original accounts','link push')+'</div>'}
+if(p==='analysis'){const before=state.previous;const changed=before?DIMS.filter((_,i)=>JSON.stringify(report.rows[i])!==JSON.stringify(before.rows[i])).map(d=>d[0]):[];html=backgroundBox()+cards('read',state.extra.some(Boolean))+'<section class="panel"><div class="section-head"><h2>What’s in question?</h2><span class="sub">'+esc(report.engine)+'</span></div><p>'+esc(report.summary)+'</p>'+(!report.engine.startsWith('On-device')?[0,1].map(i=>'<blockquote class="quote '+(i?'bquote':'')+'">'+partyIdentity(i)+' · “<span dir="auto">'+esc(segments(state.original[i])[0])+'</span>”</blockquote>').join(''):'')+(before?'<p class="sub">'+(changed.length?'Updated dimensions · '+changed.join(', '):'Reviewed again. The dimension readings are unchanged.')+'</p>':'')+'</section><div class="actions">'+act('context',state.extra.some(Boolean)?'Edit added context':'Add context','link push')+act('ai','Show AI’s judgment')+act('self','Judge for myself &nbsp;→','primary')+'</div><div class="actions">'+act('edit','Edit original accounts','link push')+'</div>'}
 if(p==='context')html=backgroundBox()+cards('context',true)+'<div class="actions">'+act('discard','Back to comparison','link push')+act('update','Update analysis &nbsp;→','primary')+'</div>';
 const decision=p==='ai'||p==='self';
 if(decision)html=decisionPage(p,report);
@@ -200,7 +206,7 @@ if(decision){
   const ref=$('refs');ref.ontoggle=()=>{state.references=ref.open};
 }}
 function edited(){state.saved=false;if($('savestatus'))$('savestatus').textContent=''}
-$('app').addEventListener('input',e=>{const el=e.target,id=el.id;let m;if((m=/^name([01])$/.exec(id))){state.names[+m[1]]=el.value}else if(infoFields.some(([key])=>key===id)){state[id]=el.value;if(id==='relationship'){
+$('app').addEventListener('input',e=>{const el=e.target,id=el.id;let m;if((m=/^name([01])$/.exec(id))){state.names[+m[1]]=el.value;const title=$('party-title'+m[1]);if(title)title.textContent=partyLabel(+m[1])}else if(infoFields.some(([key])=>key===id)){state[id]=el.value;if(id==='relationship'){
   document.querySelectorAll('[data-relationship]').forEach(b=>b.setAttribute('aria-pressed',String(relationships[b.dataset.relationship].toLowerCase()===el.value.trim().toLowerCase())));
 }}else if((m=/^(text|extra)([01])$/.exec(id))){(m[1]==='text'?state.original:state.draft)[+m[2]]=el.value;$('count-'+id).textContent=el.value.length+' / 3000';el.removeAttribute('aria-invalid');if($('warn'))$('warn').textContent=''}else if((m=/^dim([0-3])$/.exec(id))){state.values[+m[1]]=el.value;edited();
 const hints=userGuidance();
