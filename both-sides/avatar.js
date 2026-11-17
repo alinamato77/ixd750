@@ -18,11 +18,54 @@ const Avatar = (() => {
     if(playing && messages.length)captionTimer=setTimeout(syncCaption,120);
   }
   try { hidden=sessionStorage.getItem('both-sides-hide-clerk')==='yes'; } catch {}
+
+  // The scene follows its cursor in world space. Map page positions into the
+  // middle of its own canvas so that the full face stays inside the header.
+  let pointer=null, trackingFrame=0;
+  function moveScenePointer() {
+    trackingFrame=0;
+    if(!viewer || !runtime || !inView || document.hidden || hidden || reduce.matches)return;
+    const canvas=viewer.shadowRoot?.querySelector('canvas');
+    if(!canvas)return;
+    const box=canvas.getBoundingClientRect();
+    if(!box.width || !box.height)return;
+    const cx=box.left+box.width/2, cy=box.top+box.height/2;
+    function axis(value,center,extent) {
+      const distance=value-center;
+      return Math.max(-1,Math.min(1,distance/Math.max(1,distance<0?center:extent-center)));
+    }
+    const x=pointer?axis(pointer.x,cx,window.innerWidth):0;
+    const y=pointer?axis(pointer.y,cy,window.innerHeight):0;
+    const opts={clientX:cx+x*box.width*.12,clientY:cy+y*box.height*.12,
+      bubbles:true,composed:true,view:window,buttons:0};
+    canvas.dispatchEvent(new PointerEvent('pointermove',{...opts,pointerId:1,pointerType:'mouse',isPrimary:true}));
+    canvas.dispatchEvent(new MouseEvent('mousemove',opts));
+  }
+  function queueTracking() {
+    if(!trackingFrame && runtime && inView && !hidden && !document.hidden && !reduce.matches)
+      trackingFrame=requestAnimationFrame(moveScenePointer);
+  }
+  function track(event) {
+    if(!event.isTrusted || event.pointerType==='touch')return;
+    pointer={x:event.clientX,y:event.clientY};queueTracking();
+  }
+  window.addEventListener('pointermove',track,{capture:true,passive:true});
+  // Consume raw moves solely inside the scene. Native clicks, taps and page
+  // controls keep their normal targets. The reprojected moves reach Spline.
+  for(const type of ['pointermove','mousemove']){
+    slot.addEventListener(type,event=>{
+      if(event.isTrusted && event.pointerType!=='touch')event.stopPropagation();
+    },{capture:true,passive:true});
+  }
+  function center() {pointer=null;queueTracking()}
+  document.documentElement.addEventListener('pointerleave',center);
+  window.addEventListener('blur',center);
   function fitScene() {
     if(runtime && slot.clientWidth) runtime.setZoom?.(0.45 * slot.clientWidth / 140);
   }
   if ('ResizeObserver' in window) new ResizeObserver(fitScene).observe(slot);
   function removeScene() {
+    cancelAnimationFrame(trackingFrame);trackingFrame=0;
     runtime?.stop?.(); runtime=null;messages=[];syncCaption();
     viewer?.remove(); viewer=null;slot.classList.remove('scene-ready');
   }
@@ -31,11 +74,11 @@ const Avatar = (() => {
     toggle.textContent=hidden?'Show avatar':'Hide avatar';
     if(hidden||reduce.matches){removeScene();return}
     if(!inView||document.hidden){runtime?.stop?.();syncCaption();return}
-    if(viewer){runtime?.play?.();syncCaption();return}
+    if(viewer){runtime?.play?.();queueTracking();syncCaption();return}
     const current=document.createElement('spline-viewer');
     viewer=current;
     current.setAttribute('background','rgba(0,0,0,0)');
-    current.setAttribute('events-target','global');
+    current.setAttribute('events-target','local');
     current.setAttribute('loading','eager');
     current.setAttribute('url',source);
     current.addEventListener('load-complete',()=>{
@@ -49,7 +92,7 @@ const Avatar = (() => {
       robot.position.x=camera.position.x;robot.position.y=camera.position.y;
       app.setBackgroundColor?.('rgba(0,0,0,0)');
       messages=captions.map(([name,text])=>({mesh:app.findObjectByName(name),text})).filter(item=>item.mesh);
-      runtime=app;fitScene();syncCaption();slot.classList.add('scene-ready');
+      runtime=app;fitScene();queueTracking();syncCaption();slot.classList.add('scene-ready');
       if(document.hidden||!inView)app.stop?.();
     },{once:true});
     current.addEventListener('error',()=>{if(current===viewer)slot.classList.remove('scene-ready')});
