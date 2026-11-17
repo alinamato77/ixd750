@@ -195,9 +195,9 @@ let controller=null,returnPage='home',busyText='Comparing the two accounts…';
 const starter={open:false,parts:[0,0],confirm:false};
 const rowUI=()=>DIMS.map(()=>({edit:false,busy:false,ctrl:null,history:false,note:''}));
 let rows=rowUI(),resultCtrl=null;
-const copy={home:['Two sides, one story.','Put both perspectives side by side. You decide how much help you want.','01 / 03   Perspectives'],process:['Reading both sides.','You can return to your text at any time.','02 / 03   Review'],analysis:['The comparison.','Choose which concerns matter, add missing context, then see the AI’s judgment.','02 / 03   Review'],context:['A little more context.','Add what each side would like the other to know.','02 / 03   Review'],ai:['AI’s judgment.','Review how the two accounts were assessed. If you disagree with a reading, ask for another look.','03 / 03   Decision']};
+const copy={home:['Momo Court','','01 / 03   Perspectives'],process:['Reading both sides.','You can return to your text at any time.','02 / 03   Review'],analysis:['The comparison.','Choose which concerns matter, add missing context, then see the AI’s judgment.','02 / 03   Review'],context:['A little more context.','Add what each side would like the other to know.','02 / 03   Review'],ai:['AI’s judgment.','Review how the two accounts were assessed. If you disagree with a reading, ask for another look.','03 / 03   Decision']};
 function stopRowWork(){rows.forEach(r=>r.ctrl?.abort());resultCtrl?.abort();resultCtrl=null;rows=rowUI()}
-function go(page,focus=true){if(state.page==='ai'&&page!=='ai')stopRowWork();state.page=page;const [title,intro,step]=copy[page];$('title').textContent=title;$('intro').textContent=intro;$('step').textContent=step;render();if(focus){$('title').focus({preventScroll:true});window.scrollTo(0,0)}Avatar.page(page)}
+function go(page,focus=true){if(state.page==='ai'&&page!=='ai')stopRowWork();state.page=page;const [title,intro,step]=copy[page];$('title').textContent=title;$('intro').hidden=!intro;$('intro').textContent=intro;$('step').textContent=step;render();if(focus){$('title').focus({preventScroll:true});window.scrollTo(0,0)}}
 function act(id,label,css='',extra=''){return '<button type="button" class="'+css+'" data-action="'+id+'"'+extra+'>'+label+'</button>'}
 function partyLabel(i) {
   const party = 'Party ' + 'AB'[i];
