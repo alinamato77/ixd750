@@ -204,6 +204,13 @@ function partyLabel(i) {
   const name = state.names[i].trim();
   return name ? party + ' · ' + name : party;
 }
+function partyIdentity(side, label=partyLabel(side)) {
+  return '<span class="party-identity"><span>'+esc(label)+'</span>'+Portraits.inline(state.portraits[side])+'</span>';
+}
+function choiceMarkup(value) {
+  const side=choices.indexOf(value);
+  return side===0 || side===1 ? partyIdentity(side) : esc(choiceLabel(value));
+}
 function choiceLabel(value) {
   if (value === choices[0]) return partyLabel(0);
   if (value === choices[1]) return partyLabel(1);
@@ -215,8 +222,7 @@ function card(i,mode) {
   const writing = mode === 'write' || mode === 'extra';
   const value = extra ? (writing ? state.draft[i] : state.extra[i]) : state.original[i];
   const id = (extra ? 'extra' : 'text') + i;
-  const title = mode === 'write' ? 'Party ' + side : partyLabel(i);
-  const heading = '<div class="cardhead">' + Portraits.badge(state.portraits[i],i,mode==='write') + '<span class="party-label">' + esc(title) + (extra ? ' · Additional context' : '') + '</span></div>';
+  const heading = '<div class="cardhead"><span class="party-label" '+(writing && !extra ? 'id="party-title'+i+'"' : '')+'>'+esc(partyLabel(i))+(extra?' · Additional context':'')+'</span>'+Portraits.badge(state.portraits[i],i,mode==='write')+'</div>';
   const nameField = mode === 'write' ? '<label class="label" for="name' + i + '">Name</label><input class="party-name" id="name' + i + '" aria-label="Party ' + side + ' name" maxlength="80" value="' + esc(state.names[i]) + '">' : '';
   const account = writing ? '<label class="label" for="' + id + '">' + (extra ? 'Additional context' : 'Perspective') + '</label><textarea class="statement" id="' + id + '" aria-label="Party ' + side + (extra ? ' additional context' : ' perspective') + '" maxlength="3000" placeholder="' + (extra ? 'What else matters here?' : 'Paste or write Party ' + side + '’s account…') + '">' + esc(value) + '</textarea><span class="counter" aria-hidden="true" id="count-' + id + '">' + value.length + ' / 3000</span>' : '<p class="ref" dir="auto">' + esc(value || 'No added context.') + '</p>';
   return '<div class="card ' + (extra ? 'extra ' : '') + (i ? 'b' : 'a') + (extra ? 'extra' : 'card') + '">' + heading + nameField + account + '</div>';
@@ -314,7 +320,7 @@ function concernCard(p){
 function concernColumn(side){
   const k='ab'[side],points=state.report.painPoints[k],c=state.custom[side];
   const custom=c?'<div class="concern custom editing"><input type="checkbox" data-concern="'+k+'-custom" aria-label="Include this concern"'+(c.on?' checked':'')+'><span class="tick" aria-hidden="true"></span><span class="concern-body"><label class="sr" for="custom'+side+'">Your concern for '+esc(partyLabel(side))+'</label><input class="concern-input" id="custom'+side+'" maxlength="200" placeholder="What does '+'AB'[side]+' care about?" value="'+esc(c.text)+'"></span>'+act('remove-concern'+side,'×','icon-btn small',' aria-label="Remove this concern"')+'</div>':act('add-concern'+side,'+ Add a concern','chip add-concern');
-  return '<fieldset class="concern-col '+(side?'b':'a')+'"><legend>'+esc(partyLabel(side))+'’s concerns</legend>'+points.map(p=>concernCard({...p,side})).join('')+custom+'</fieldset>';
+  return '<fieldset class="concern-col '+(side?'b':'a')+'"><legend>'+partyIdentity(side)+' · concerns</legend>'+points.map(p=>concernCard({...p,side})).join('')+custom+'</fieldset>';
 }
 function concernsChanged(){
   const before=state.previous?.painPoints;if(!before)return '';
@@ -329,7 +335,7 @@ function resultsBar(votes){
   const labels=[partyLabel(0),partyLabel(1),'Both equally','Insufficient context'];
   return '<figure class="result-chart"><figcaption>Judgment across four dimensions</figcaption><div class="result-track" aria-hidden="true">'+
     counts.map((count,i)=>count?'<span class="tone'+i+'" style="flex:'+count+'"></span>':'').join('')+
-    '</div><ul class="result-key">'+counts.map((n,i)=>'<li><i aria-hidden="true" class="tone'+i+'"></i>'+esc(labels[i])+' <strong>'+n+'/4</strong></li>').join('')+'</ul></figure>';
+    '</div><ul class="result-key">'+counts.map((n,i)=>'<li><i aria-hidden="true" class="tone'+i+'"></i>'+(i<2?partyIdentity(i):esc(labels[i]))+' <strong>'+n+'/4</strong></li>').join('')+'</ul></figure>';
 }
 function stepsFor(j){
   if(Array.isArray(j.steps)&&j.steps.length===3)return j.steps;
@@ -338,21 +344,21 @@ function stepsFor(j){
   return steps;
 }
 function stepsMarkup(j){
-  return stepsFor(j).map((text,i)=>'<p class="action-line"><strong>'+(i<2?esc(state.names[i].trim()||'Party '+'AB'[i])+' should':'Final suggestion')+'</strong> '+emphasize(text,j.keywords)+'</p>').join('');
+  return stepsFor(j).map((text,i)=>'<p class="action-line"><strong>'+(i<2?partyIdentity(i,state.names[i].trim()||'Party '+'AB'[i])+' should':'Final suggestion')+'</strong> '+emphasize(text,j.keywords)+'</p>').join('');
 }
-function quotes(r){return [r.a,r.b].map((q,j)=>q?'<blockquote class="quote '+(j?'bquote':'')+'">'+esc(partyLabel(j))+' · “<span dir="auto">'+esc(q)+'</span>”</blockquote>':'').join('')}
+function quotes(r){return [r.a,r.b].map((q,j)=>q?'<blockquote class="quote '+(j?'bquote':'')+'">'+partyIdentity(j)+' · “<span dir="auto">'+esc(q)+'</span>”</blockquote>':'').join('')}
 function speaksTo(r){
   const hits=currentFocus().items.filter(f=>f.quote&&(overlaps(f.quote,r.a)||overlaps(f.quote,r.b)));
-  return hits.length?'<p class="speaks"><span>Speaks to</span> '+hits.map(f=>'<span class="focus-chip '+(f.side?'b':'a')+'">'+'AB'[f.side]+' · '+esc(f.text)+'</span>').join(' ')+'</p>':'';
+  return hits.length?'<p class="speaks"><span>Speaks to</span> '+hits.map(f=>'<span class="focus-chip '+(f.side?'b':'a')+'">'+partyIdentity(f.side)+' · '+esc(f.text)+'</span>').join(' ')+'</p>':'';
 }
 function metricAI(r,i){
   const ui=rows[i],name=DIMS[i][0];
   const head='<div class="metric-head"><h3>'+name+'</h3>'+act('refresh'+i,'<span aria-hidden="true">↻</span>','icon-btn',' aria-label="Re-review '+name+'" aria-expanded="'+(ui.edit||ui.busy)+'" title="I don’t agree. Re-review '+name.toLowerCase()+'."'+(ui.busy?' disabled':''))+'</div>';
   const editor=ui.edit&&!ui.busy?'<div class="refresh-row"><label class="label" for="miss'+i+'">What did the AI miss? <span class="optional">Optional</span></label><input id="miss'+i+'" class="refresh-input" maxlength="300" value="'+esc(ui.note)+'" placeholder="e.g. B’s text shows the time"><div class="refresh-actions">'+act('rereview'+i,'Re-review','primary small')+act('cancel-refresh'+i,'Cancel','link')+'</div></div>':'';
   const body=ui.busy?'<p class="row-loading" role="status"><span class="spinner" aria-hidden="true"></span>Re-reviewing '+name.toLowerCase()+'…</p>':
-    '<p><strong>'+esc(choiceLabel(r.pick))+'</strong></p><p>'+esc(r.why)+'</p>'+quotes(r)+speaksTo(r);
+    '<p><strong>'+choiceMarkup(r.pick)+'</strong></p><p>'+esc(r.why)+'</p>'+quotes(r)+speaksTo(r);
   const history=r.history?.length&&!ui.busy?'<p class="revised"><span class="badge">Reviewed again'+(r.note?' · based on your note':'')+'</span>'+act('history'+i,ui.history?'Hide previous reading'+(r.history.length>1?'s':''):'Show previous reading'+(r.history.length>1?'s ('+r.history.length+')':''),'link',' aria-expanded="'+ui.history+'"')+'</p>'+
-    (ui.history?'<div class="history">'+r.history.slice().reverse().map(h=>'<div class="old"><p><strong>'+esc(choiceLabel(h.pick))+'</strong>'+(h.note?' <span class="sub">· your note: “'+esc(h.note)+'”</span>':'')+'</p><p>'+esc(h.why)+'</p>'+quotes(h)+'</div>').join('')+'</div>':''):'';
+    (ui.history?'<div class="history">'+r.history.slice().reverse().map(h=>'<div class="old"><p><strong>'+choiceMarkup(h.pick)+'</strong>'+(h.note?' <span class="sub">· your note: “'+esc(h.note)+'”</span>':'')+'</p><p>'+esc(h.why)+'</p>'+quotes(h)+'</div>').join('')+'</div>':''):'';
   return '<div class="metric" id="metric'+i+'" aria-busy="'+ui.busy+'">'+head+editor+body+history+'</div>';
 }
 function resultSection(j){
@@ -362,7 +368,7 @@ function resultSection(j){
 }
 function focusReference(){
   const items=currentFocus().items;
-  return '<section class="focus-ref" aria-label="Concerns in focus"><span class="sub">Focusing on</span>'+items.map(f=>'<span class="focus-chip '+(f.side?'b':'a')+'">'+esc(partyLabel(f.side))+' · '+esc(f.text)+'</span>').join('')+act('back','Change','link')+'</section>';
+  return '<section class="focus-ref" aria-label="Concerns in focus"><span class="sub">Focusing on</span>'+items.map(f=>'<span class="focus-chip '+(f.side?'b':'a')+'">'+partyIdentity(f.side)+' · '+esc(f.text)+'</span>').join('')+act('back','Change','link')+'</section>';
 }
 function decisionPage(j){
   const confirmed=Testimony.ensure().confirmed;
@@ -388,7 +394,7 @@ if(p==='ai'){
 }}
 
 $('app').addEventListener('input',e=>{const el=e.target,id=el.id;let m;
-  if((m=/^name([01])$/.exec(id))){state.names[+m[1]]=el.value}
+  if((m=/^name([01])$/.exec(id))){state.names[+m[1]]=el.value;const title=$('party-title'+m[1]);if(title)title.textContent=partyLabel(+m[1])}
   else if(infoFields.some(([key])=>key===id)){state[id]=el.value;if(id==='relationship'){
     document.querySelectorAll('[data-relationship]').forEach(b=>b.setAttribute('aria-pressed',String(relationships[b.dataset.relationship].toLowerCase()===el.value.trim().toLowerCase())));
   }if(id==='background'&&starter.confirm){starter.confirm=false;syncStarter()}}

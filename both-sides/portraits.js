@@ -36,6 +36,9 @@ const Portraits = (() => {
   function sprite(shape) {
     return '<span class="portrait-sprite" aria-hidden="true" style="--x:'+(shape%4)*100/3+'%;--y:'+Math.floor(shape/4)*20+'%"></span>';
   }
+  function inline(selection) {
+    return '<span class="inline-portrait" aria-hidden="true" style="'+tint(selection.tone)+'">'+sprite(selection.shape)+'</span>';
+  }
   const camera = '<span class="camera-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 7h4l2-3h6l2 3h4v13H3z"/><circle cx="12" cy="13" r="3.3"/></svg></span>';
   function badge(selection, side, editable) {
     const inside = sprite(selection.shape)+(editable?camera:'');
@@ -77,5 +80,5 @@ const Portraits = (() => {
     update();dialog.showModal();dialog.querySelector('.portrait-scroll').scrollTop=0;
     grid.children[draft.shape].focus({preventScroll:true});
   }
-  return {initial,badge,open};
+  return {initial,badge,inline,open};
 })();
