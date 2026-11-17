@@ -277,3 +277,8 @@ button.small { padding:5px 13px; font-size:13px; }
 .inline-portrait { display:inline-block;width:1.55em;height:1.55em;vertical-align:middle;margin-inline-start:.3em; }
 .cardhead .party-label { min-width:0; }
 #avatar-slot { touch-action:pan-y; }
+
+/* Keep the Spline pointer coordinate system stable as its caption changes. */
+.clerk { inline-size:13rem; }
+#avatar-message { inline-size:100%; min-block-size:2.7em; }
+@media(max-width:680px) { .clerk { inline-size:7rem; } #avatar-message { min-block-size:4.05em; } }
