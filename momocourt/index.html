@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#292b2c"><title>Momo Court</title>
+<link rel="stylesheet" href="./style.css"></head><body><div class="shell"><header><button type="button" class="wordmark" data-restart aria-label="Momo Court: restart the court" title="Restart the court"><span class="mark" aria-hidden="true"></span>Momo Court <span class="court-tag">AI Court</span></button><div class="header-end"><div class="progress" id="step"></div><button type="button" class="new-case" id="new-case" data-restart hidden>New court <span aria-hidden="true">↺</span></button></div></header><main><div class="hero"><h1 id="title" tabindex="-1"></h1>
+<div id="avatar-slot" class="avatar">
+  <div id="roamer" role="img" aria-label="Momo, the court clerk: a round glossy character with a two-dot face">
+    <div class="momo-anchor" id="momo-anchor" aria-hidden="true">
+      <span class="orb-poster"></span>
+      <canvas id="momo-canvas"></canvas>
+      <img class="hair-on" src="hair.png" alt="" width="360" height="432">
+    </div>
+    <span id="avatar-message" aria-hidden="true"></span>
+  </div>
+</div>
+</div><div id="app"></div></main><footer class="foot"><span>Sealed to this tab · advisory rulings only</span><button type="button" class="link" id="clerk-toggle" aria-pressed="false">Hide clerk</button><span>A / B</span></footer><span class="sr" role="status" id="live"></span></div>
+<div class="toast" id="toast" role="status" hidden><span>Court restarted</span><span aria-hidden="true">·</span><button type="button" class="link" id="toast-undo">Undo</button></div>
+
+<dialog id="portrait-dialog" aria-labelledby="portrait-title">
+  <div class="portrait-heading"><h2 id="portrait-title">Choose a portrait</h2><button type="button" data-dismiss aria-label="Cancel portrait changes">×</button></div>
+  <div class="portrait-scroll">
+    <div class="portrait-grid" role="group" aria-label="Portrait shapes"></div>
+    <label class="tone-label" for="portrait-tone">Color</label>
+    <input id="portrait-tone" type="range" min="0" max="100" step="1" value="45">
+    <div class="temperature-ends"><span>Cool</span><span>Warm</span></div>
+    <div class="color-presets" role="group" aria-label="Gradient suggestions"></div>
+  </div>
+  <div class="portrait-footer"><div class="portrait-preview" aria-hidden="true"></div><div><strong>Preview</strong><div class="preview-name"></div></div><button type="button" class="primary" data-apply>Use portrait</button></div>
+</dialog>
+<!-- Momo: Spline's Vanilla JS runtime (the engine behind the Next.js <Spline /> component). -->
+<script type="module">
+  import { Application } from 'https://unpkg.com/@splinetool/runtime@2.0.129/build/runtime.js';
+  const canvas = document.getElementById('momo-canvas');
+  try {
+    const app = new Application(canvas);
+    await app.load('https://prod.spline.design/1WPMwYarjzm8SXqb/scene.splinecode');
+    // Cursor follow, framing and tracking are set up in app.js once the scene is ready.
+    window.momoSpline = app;
+    window.dispatchEvent(new Event('momo-ready'));
+  } catch (error) {
+    // Keep the poster when the scene can't load.
+    console.warn('Momo could not load the Spline scene.', error);
+  }
+</script>
+<script src="./portraits.js"></script>
+<script src="./app.js"></script>
+</body></html>
