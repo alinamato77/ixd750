@@ -6,83 +6,6 @@ const DIMS=[
  ['Consideration','Who takes the other person’s situation into account?']
 ];
 const choices=['Side A','Side B','Both equally','Not enough context'];
-const cases = [
-  {
-    name: 'Identical ice cream',
-    relationship: 'Roommates',
-    background: 'They share a freezer. Each bought a tub of the same brand and flavor of ice cream.',
-    sides: [
-      'I saw B eating the exact ice cream I buy. I thought it was mine. I want a heads-up before anyone eats my food. When B said she bought the same flavor, I wondered why she was copying me. I’m still upset that she didn’t apologize.',
-      'I bought that brand and flavor because I like it too. I ate from the tub I believed was mine. It hurt to be accused of taking her food and then of copying her. I’d like her to ask me what happened before expecting an apology.'
-    ],
-    keywords: ['unresolved','ask others to check','same flavor'],
-    steps: ['Acknowledge that matching flavors alone cannot identify the tub, and apologize for jumping to a conclusion.', 'Explain which tub you thought was yours. If you discover you took A’s, offer to replace it.', 'Check the tubs together. If ownership is still unclear, leave it open and label the lids with your initials.'],
-    issue: 'The tubs look identical. Can either roommate identify the one B opened?',
-    painPoints: {
-      a: [
-        ['A believes B ate from the tub A bought.', 'I thought it was mine.'],
-        ['A wants to be asked before anyone eats their food.', 'I want a heads-up before anyone eats my food.'],
-        ['A is still hurt that B has not apologized.', 'I’m still upset that she didn’t apologize.']
-      ],
-      b: [
-        ['B feels wrongly accused of taking A’s food and of copying.', 'It hurt to be accused of taking her food and then of copying her.'],
-        ['B wants to buy a flavor they like without it being called copying.', 'I bought that brand and flavor because I like it too.'],
-        ['B wants A to ask what happened before expecting an apology.', 'I’d like her to ask me what happened before expecting an apology.']
-      ]
-    },
-    readings: [
-      ['Not enough context', 'Both bought the same ice cream. Seeing B eat that flavor does not identify the tub.', 0, 0],
-      ['Side B', 'B’s own purchase offers another explanation for what A saw. The shared flavor alone does not establish copying or taking.', 1, 0],
-      ['Not enough context', 'A states a boundary. The accounts do not establish an earlier agreement or whose tub was opened.', 2, 1],
-      ['Not enough context', 'A wants her belongings respected. B wants to be asked before being blamed. Both concerns can be acknowledged.', 2, 2]
-    ],
-    alternates: [
-      ['Both equally', 'Each account rests on a belief about whose tub it was. Neither names a mark or receipt that tells the tubs apart, so both are equally checkable once they look in the freezer together.', 1, 1],
-      ['Both equally', 'A’s conclusion and B’s denial both depend on which tub was opened. Neither line of reasoning reaches past that missing detail.', 3, 1],
-      ['Both equally', 'Neither side cites an earlier house rule. A’s request for a heads-up and B’s request to be asked first are both reasonable rules to agree on now.', 2, 3],
-      ['Side B', 'B names how the accusation felt and asks for a conversation first. A’s account does not yet mention how B was affected.', 4, 3]
-    ],
-    overall: 'Whose tub B opened is unresolved. A can ask others to check before taking her food, and B can choose the same flavor.',
-    solution: 'A could say, “I care about people asking before taking my food. I jumped to a conclusion, and I’m sorry I accused you.” Check the tubs together. If B realizes she opened A’s, she can apologize and replace it. If they still cannot tell, leave ownership unresolved and put initials on the lids next time.'
-  },
-  {
-    name: 'The grocery split',
-    relationship: 'Roommates',
-    background: 'One receipt lists $18 in cleaning supplies and $12 in coffee for A. They agreed by text to split shared cleaning supplies equally and pay for personal groceries separately.',
-    sides: [
-      'I paid the $30 bill and asked B for $15. I picked everything up in one trip, so splitting the receipt in half felt simple. I can show B the itemized receipt.',
-      'We agreed to split the cleaning supplies. I don’t drink the coffee A bought for herself. I’m happy to send $9 for my half of the supplies.'
-    ],
-    keywords: ['$9','$12','personal coffee'],
-    steps: ['Show the itemized receipt and separate the $12 coffee from the shared supplies.', 'Pay $9 for half of the $18 in shared supplies. If you already sent $15, ask for the $6 difference.', 'Mark shared items before splitting the next receipt, so each roommate can check the total.'],
-    issue: 'Should they split the whole receipt or only the cleaning supplies covered by their agreement?',
-    painPoints: {
-      a: [
-        ['A paid the whole bill up front and wants to be paid back.', 'I paid the $30 bill and asked B for $15.'],
-        ['A feels one shopping trip should mean one simple split.', 'I picked everything up in one trip, so splitting the receipt in half felt simple.']
-      ],
-      b: [
-        ['B feels the agreement covers only the cleaning supplies.', 'We agreed to split the cleaning supplies.'],
-        ['B doesn’t want to pay for coffee A bought for themself.', 'I don’t drink the coffee A bought for herself.'],
-        ['B is ready to pay their half of the shared supplies.', 'I’m happy to send $9 for my half of the supplies.']
-      ]
-    },
-    readings: [
-      ['Side B', 'The shared receipt details support B’s calculation: half of $18 is $9.', 0, 2],
-      ['Side B', 'Halving the total is convenient, but includes $6 for A’s personal coffee in B’s share.', 1, 1],
-      ['Side B', 'Their earlier text sets the rule: shared supplies are split and personal groceries are paid for individually.', 1, 0],
-      ['Both equally', 'A offers to show the receipt and B offers to pay for the shared items. Both offers can help settle the amount.', 2, 2]
-    ],
-    alternates: [
-      ['Both equally', 'A offers the itemized receipt and B cites exact figures. Together they can check the split line by line.', 2, 2],
-      ['Side B', 'B ties the amount to the agreement. A’s reason is convenience, which does not change who owes what.', 1, 0],
-      ['Not enough context', 'The agreement is described in the background, not shown. Reading the text message together would confirm that it covers only cleaning supplies.', 0, 0],
-      ['Side A', 'A carried the cost and the errand for both and offers to show the receipt, which makes checking easy for B.', 2, 2]
-    ],
-    overall: 'Under the stated agreement, B owes $9. A’s share is the other $9 for supplies plus $12 for coffee.',
-    solution: 'Look at the receipt together and mark the two categories. B sends A $9. If B already sent $15, A returns $6. On the next shared shop, total the shared items before dividing by two.'
-  }
-];
 function localSteps(){
   return [
     'Name the specific event behind your concern and ask B to clarify one detail.',
@@ -442,8 +365,9 @@ function focusReference(){
   return '<section class="focus-ref" aria-label="Concerns in focus"><span class="sub">Focusing on</span>'+items.map(f=>'<span class="focus-chip '+(f.side?'b':'a')+'">'+esc(partyLabel(f.side))+' · '+esc(f.text)+'</span>').join('')+act('back','Change','link')+'</section>';
 }
 function decisionPage(j){
-  const judgments='<p class="sub">'+esc(j.engine)+'</p>'+j.rows.map(metricAI).join('');
-  const columns=[['Judgment',judgments],['Result &amp; suggestion','<div id="result-section">'+resultSection(j)+'</div>']].map(([label,body],i)=>
+  const confirmed=Testimony.ensure().confirmed;
+  const judgments='<div id="review-left">'+Testimony.left()+'</div>'+(confirmed?'<p class="sub">'+esc(j.engine)+'</p>'+j.rows.map(metricAI).join(''):'');
+  const columns=[['Judgment',judgments],['Result &amp; suggestion','<div id="review-right">'+Testimony.right()+'</div>'+(confirmed?'<div id="result-section">'+resultSection(j)+'</div>':'')]].map(([label,body],i)=>
     '<details class="fold" id="column'+i+'" '+(state.panels.ai[i]?'open':'')+'><summary>'+label+'</summary><div class="inner">'+body+'</div></details>').join('');
   return '<details class="fold smallref" id="refs" '+(state.references?'open':'')+'><summary>Original accounts</summary>'+backgroundBox()+cards('read',state.extra.some(Boolean))+'</details>'+
     focusReference()+'<div class="grid folds">'+columns+'</div><div class="actions">'+act('back','← Back to comparison','link push')+'</div><div class="actions">'+act('new','Start a new comparison','link')+'</div>';
@@ -452,12 +376,12 @@ function renderMetric(i){const el=$('metric'+i);if(el)el.outerHTML=metricAI(stat
 function renderResult(){const el=$('result-section');if(el)el.innerHTML=resultSection(state.judgment)}
 
 function render(){const p=state.page,report=state.report;let html='';
-if(p==='home')html='<div class="examples"><span>Try a sample</span>'+cases.map((item,i)=>act('example'+i,esc(item.name),'chip')).join('')+'</div>'+backgroundBox(true)+'<div class="section-head"><h2>Perspectives</h2></div>'+cards('write')+'<div class="actions"><span id="warn" class="msg push" role="alert"></span>'+act('compare','Compare perspectives &nbsp;→','primary')+'</div>';
+if(p==='home')html='<div class="examples"><span>Try a sample</span>'+cases.map((item,i)=>act('load-example',esc(item.name),'chip',' data-example="'+i+'"')).join('')+'</div>'+backgroundBox(true)+'<div class="section-head"><h2>Perspectives</h2></div>'+cards('write')+'<div class="actions"><span id="warn" class="msg push" role="alert"></span>'+act('compare','Compare perspectives &nbsp;→','primary')+'</div>';
 if(p==='process')html=backgroundBox()+cards('read',false)+'<div class="busy" aria-live="polite">'+esc(busyText)+'<br>'+act('cancel','Back','link')+'</div>';
 if(p==='analysis')html=backgroundBox()+cards('read',state.extra.some(Boolean))+'<section class="panel"><div class="section-head"><h2>What’s in question?</h2><span class="sub">'+esc(report.engine)+'</span></div><p>'+esc(report.summary)+'</p><p class="sub concern-hint">The AI’s judgment will focus on the concerns you keep selected.</p><div class="concerns">'+concernColumn(0)+concernColumn(1)+'</div><p id="focus-warn" class="msg" role="alert"></p>'+concernsChanged()+'</section><div class="actions">'+act('context',state.extra.some(Boolean)?'Edit added context':'Add context','link push')+act('judge','See AI’s judgment &nbsp;→','primary')+'</div><div class="actions">'+act('edit','Edit original accounts','link push')+'</div>';
 if(p==='context')html=backgroundBox()+cards('context',true)+'<div class="actions">'+act('discard','Back to comparison','link push')+act('update','Update analysis &nbsp;→','primary')+'</div>';
 if(p==='ai')html=decisionPage(state.judgment);
-$('app').className='module '+(p==='ai'||p==='context'||p==='analysis'?'wide':'');$('app').innerHTML=html;
+$('app').className='module '+(p==='ai'||p==='context'||p==='analysis'?'wide':'');$('app').innerHTML=html;if(p==='ai')Testimony.start();
 if(p==='ai'){
   [0,1].forEach(i=>{const panel=$('column'+i);panel.ontoggle=()=>{state.panels.ai[i]=panel.open}});
   const ref=$('refs');ref.ontoggle=()=>{state.references=ref.open};
@@ -484,7 +408,7 @@ $('app').addEventListener('keydown',e=>{
   if(m&&e.key==='Escape'){e.preventDefault();rows[+m[1]].edit=false;renderMetric(+m[1]);document.querySelector('[data-action="refresh'+m[1]+'"]').focus()}
 });
 function resetFocus(){state.off=[];state.judgment=null}
-function clearVotes(){state.panels={ai:[true,true]};state.references=false;state.custom=[null,null];resetFocus()}
+function clearVotes(){Testimony.reset();state.panels={ai:[true,true]};state.references=false;state.custom=[null,null];resetFocus()}
 let analyzedOriginal='';
 const storageKey='both-sides-review-v1';
 function persist(){try{sessionStorage.setItem(storageKey,JSON.stringify({state,analyzedOriginal}))}catch{}}
@@ -591,8 +515,8 @@ case 'portrait0':case 'portrait1':{
   });
   break;
 }
-case 'example0':case 'example1':{
-  const item=cases[Number(action.slice(-1))];
+case 'load-example':{
+  const item=cases[Number(button.dataset.example)];
   if((Object.values(sharedInfo()).some(Boolean)||state.names.some(s=>s.trim())||state.original.some(s=>s.trim()))&&!confirm('Replace this comparison with “'+item.name+'”?'))return;
   for(const [key] of infoFields)state[key]=item[key];
   state.names=['',''];state.original=[...item.sides];state.extra=['',''];state.draft=['',''];
@@ -613,159 +537,5 @@ case 'edit':go('home');break;
 case 'back':go('analysis');break;
 case 'new':if(!confirm('Start over and clear this comparison?'))return;for(const [key] of infoFields)state[key]='';state.names=['',''];state.portraits=Portraits.initial();state.original=['',''];state.extra=['',''];state.draft=['',''];state.report=null;state.previous=null;analyzedOriginal='';clearVotes();go('home');break}
 });
-
-// ---- Avatar: a small Spline character that roams free space without covering text ----
-const Avatar=(()=>{
-  const roamer=$('roamer'),body=roamer.querySelector('.roamer-body'),viewer=roamer.querySelector('spline-viewer'),bubble=$('avatar-message'),slot=$('avatar-slot');
-  const reduce=matchMedia('(prefers-reduced-motion: reduce)'),narrow=matchMedia('(max-width: 580px)');
-  const OBSTACLES='header .wordmark,header .progress,.hero h1,.hero p,.card,.panel,.fold,.focus-ref,.actions>*,.examples,#app>.section-head,.busy,.foot span';
-  const PAD=12,EDGE=10,STEP=20,AVATAR_ZOOM=0.45;
-  const lines={home:'Tell me both sides.',process:'Reading carefully…',analysis:'Which concerns matter most?',context:'Context helps.',ai:'Disagree? Press ↻.'};
-  const idle=['♥','Justice is the shield of the law.','Order in the court. We are now in session.'];
-  let pos=null,stepped=false,walk=null,wanderTimer=0,bubbleTimer=0,idleTimer=0,typing=null,queued=false,reason='',page='home',idleIndex=0;
-  const size=()=>narrow.matches?72:140;
-  const vw=()=>document.documentElement.clientWidth,vh=()=>innerHeight;
-  function textRect(el){
-    if(el.matches('.hero h1,.hero p')){const r=document.createRange();r.selectNodeContents(el);const b=r.getBoundingClientRect();if(b.width)return b}
-    return el.getBoundingClientRect();
-  }
-  function obstacles(){
-    const list=[];
-    document.querySelectorAll(OBSTACLES).forEach(el=>{const r=textRect(el);if(r.width&&r.height&&r.bottom>-PAD&&r.top<vh()+PAD)list.push({l:r.left-PAD,t:r.top-PAD,r:r.right+PAD,b:r.bottom+PAD})});
-    return list;
-  }
-  const hits=(box,obs)=>obs.some(o=>box.l<o.r&&box.r>o.l&&box.t<o.b&&box.b>o.t);
-  const boxAt=(p,s)=>({l:p.x,t:p.y,r:p.x+s,b:p.y+s});
-  const inView=(p,s)=>p.x>=EDGE&&p.y>=EDGE&&p.x+s<=vw()-EDGE&&p.y+s<=vh()-EDGE;
-  const isFree=(p,s,obs)=>inView(p,s)&&!hits(boxAt(p,s),obs);
-  function freeSpots(obs,s){
-    const out=[];
-    for(let y=EDGE;y+s<=vh()-EDGE;y+=STEP)for(let x=EDGE;x+s<=vw()-EDGE;x+=STEP){const p={x,y};if(!hits(boxAt(p,s),obs))out.push(p)}
-    return out;
-  }
-  function pathClear(a,b,obs,s){const d=Math.hypot(b.x-a.x,b.y-a.y),n=Math.max(1,Math.ceil(d/10));for(let k=1;k<=n;k++){const p={x:a.x+(b.x-a.x)*k/n,y:a.y+(b.y-a.y)*k/n};if(hits(boxAt(p,s),obs))return false}return true}
-  const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
-  function place(p){pos=p;roamer.style.transform='translate3d('+Math.round(p.x)+'px,'+Math.round(p.y)+'px,0)'}
-  function show(on){roamer.classList.toggle('away',!on)}
-  function cancelWalk(){if(walk){cancelAnimationFrame(walk.frame);walk=null;body.classList.remove('walking')}}
-  function slotSpot(s){const r=slot.getBoundingClientRect();return {x:r.left+r.width/2-s/2,y:r.top+r.height/2-s/2}}
-  function moveTo(target,{fast=false,hop=false}={}){
-    cancelWalk();hideBubble();show(true);
-    if(!pos||reduce.matches||hop){
-      if(pos&&hop&&!reduce.matches){roamer.classList.add('hop');setTimeout(()=>{place(target);roamer.classList.remove('hop')},220)}else place(target);
-      return;
-    }
-    const from={...pos},d=dist(from,target);if(d<2){place(target);return}
-    const duration=Math.min(fast?700:2600,Math.max(350,d/(fast?0.9:0.16)));
-    body.style.setProperty('--lean',(target.x>from.x?6:-6)+'deg');body.classList.add('walking');
-    const start=performance.now();
-    walk={target,frame:0};
-    const tick=now=>{const t=Math.min(1,(now-start)/duration),e=t<.5?2*t*t:1-(-2*t+2)**2/2;place({x:from.x+(target.x-from.x)*e,y:from.y+(target.y-from.y)*e});if(t<1&&walk)walk.frame=requestAnimationFrame(tick);else cancelWalk()};
-    walk.frame=requestAnimationFrame(tick);
-  }
-  // Pick a free spot. With `near`, prefer spots close to that point; with `away`, spots far from it.
-  function chooseSpot(obs,s,{near,away,reachable=true}={}){
-    const spots=freeSpots(obs,s);if(!spots.length)return null;
-    let ranked=spots;
-    if(near)ranked=spots.slice().sort((a,b)=>dist(a,near)-dist(b,near)).slice(0,8);
-    else if(away)ranked=spots.slice().sort((a,b)=>dist(b,away)-dist(a,away)).slice(0,8);
-    else ranked=spots.slice().sort(()=>Math.random()-.5);
-    if(reachable&&pos){const ok=ranked.find(p=>dist(p,pos)>s*.6&&pathClear(pos,p,obs,s));if(ok)return {spot:ok,hop:false}}
-    return {spot:ranked[Math.floor(Math.random()*Math.min(3,ranked.length))],hop:true};
-  }
-  function sectionPoint(){
-    const sel={home:'.background-box',process:'.busy',analysis:'.panel',context:'.contextgrid',ai:'.focus-ref'}[page];
-    const el=sel&&document.querySelector(sel);if(!el)return null;
-    const r=el.getBoundingClientRect();return {x:r.right+12,y:Math.max(EDGE,r.top)};
-  }
-  function plan(){
-    queued=false;const why=reason;reason='';
-    if(document.hidden)return;
-    const s=size();roamer.style.setProperty('--size',s+'px');
-    slot.classList.toggle('empty',stepped&&!narrow.matches);
-    if(!stepped){cancelWalk();show(true);place(slotSpot(s));return}
-    const obs=obstacles();
-    // Small screens, or no room for the full-size avatar: shrink and dock to a free corner.
-    const dockTo=(d,fallback)=>{
-      roamer.style.setProperty('--size',d+'px');
-      const corners=[{x:vw()-d-EDGE,y:vh()-d-EDGE},{x:EDGE,y:vh()-d-EDGE},{x:vw()-d-EDGE,y:EDGE+56},{x:EDGE,y:EDGE+56}];
-      const spot=corners.find(p=>isFree(p,d,obs));
-      cancelWalk();
-      if(spot){show(true);if(!pos||dist(spot,pos)>2)moveTo(spot,{hop:true})}
-      else fallback();
-    };
-    if(narrow.matches){dockTo(s,()=>{show(true);place(slotSpot(s))});return}
-    if(!freeSpots(obs,s).length){dockTo(72,()=>show(false));return}
-    if(typing){
-      const r=typing.getBoundingClientRect(),c=chooseSpot(obs,s,{away:{x:r.left+r.width/2,y:r.top+r.height/2}});
-      if(c)moveTo(c.spot,{hop:c.hop});else show(false);
-      return;
-    }
-    const blocked=!pos||!isFree(pos,s,obs)||walk&&hits(boxAt(walk.target,s),obs);
-    if(why==='page'){const near=sectionPoint(),c=chooseSpot(obs,s,near?{near}:{});if(c)moveTo(c.spot,{hop:c.hop});else show(false);return}
-    if(blocked||why==='wander'){
-      const c=why==='wander'?chooseSpot(obs,s):chooseSpot(obs,s,{near:pos||{x:vw(),y:vh()/2}});
-      if(!c){cancelWalk();show(false);return}
-      if(reduce.matches&&!blocked)return;
-      moveTo(c.spot,{fast:blocked&&why!=='wander',hop:c.hop});
-    }
-  }
-  function replan(why=''){if(why==='page'||why==='wander'||!reason)reason=why;if(!queued){queued=true;requestAnimationFrame(plan)}}
-  function scheduleWander(){
-    clearTimeout(wanderTimer);
-    if(reduce.matches||document.hidden)return;
-    wanderTimer=setTimeout(()=>{if(stepped&&!typing&&!narrow.matches&&!walk)replan('wander');scheduleWander()},4000+Math.random()*4000);
-  }
-  // Speech bubble: shown only where it fits without covering text.
-  function hideBubble(){clearTimeout(bubbleTimer);bubble.classList.remove('on')}
-  function say(text,ms=3200){
-    if(!pos||walk||document.hidden||roamer.classList.contains('away'))return;
-    bubble.textContent=text;bubble.style.left='0px';bubble.style.top='0px';
-    const w=bubble.offsetWidth,h=bubble.offsetHeight,s=size(),obs=obstacles();
-    const spots=[[s/2-w/2,-h-6],[-w-6,s/2-h/2],[s+6,s/2-h/2],[s/2-w/2,s+6]];
-    const fit=spots.find(([x,y])=>{const b={l:pos.x+x,t:pos.y+y,r:pos.x+x+w,b:pos.y+y+h};return b.l>=EDGE&&b.t>=EDGE&&b.r<=vw()-EDGE&&b.b<=vh()-EDGE&&!hits(b,obs)});
-    if(!fit)return;
-    bubble.style.left=fit[0]+'px';bubble.style.top=fit[1]+'px';bubble.classList.add('on');
-    clearTimeout(bubbleTimer);bubbleTimer=setTimeout(hideBubble,ms);
-  }
-  function scheduleIdle(){clearTimeout(idleTimer);if(document.hidden)return;idleTimer=setTimeout(()=>{say(idle[idleIndex++%idle.length]);scheduleIdle()},9000+Math.random()*5000)}
-  // Step out of the hero: fade out while the slot collapses, then appear in free space once layout settles.
-  function stepOut(){
-    if(stepped)return;stepped=true;removeEventListener('pointerdown',stepOut);removeEventListener('keydown',stepOut);
-    if(narrow.matches){replan('page');scheduleWander();return}
-    show(false);slot.classList.add('empty');pos=null;
-    let done=false;const settle=()=>{if(done)return;done=true;replan('page');scheduleWander()};
-    slot.addEventListener('transitionend',settle,{once:true});setTimeout(settle,650);
-  }
-  addEventListener('pointerdown',stepOut,{once:true});addEventListener('keydown',stepOut,{once:true});
-  setTimeout(stepOut,3000);
-  addEventListener('scroll',()=>replan(),{passive:true});
-  addEventListener('resize',()=>replan());
-  narrow.addEventListener?.('change',()=>replan('page'));
-  reduce.addEventListener?.('change',()=>{scheduleWander();replan()});
-  new ResizeObserver(()=>replan()).observe($('app'));
-  document.addEventListener('focusin',e=>{if(e.target.matches('#app textarea,#app input:not([type=checkbox])')){typing=e.target;replan('type')}});
-  document.addEventListener('focusout',e=>{if(e.target===typing){typing=null;setTimeout(()=>replan(),1500)}});
-  document.addEventListener('visibilitychange',()=>{
-    const app=viewer._spline;
-    if(document.hidden){clearTimeout(wanderTimer);clearTimeout(idleTimer);cancelWalk();hideBubble();app?.stop?.()}
-    else{app?.play?.();scheduleWander();scheduleIdle();replan()}
-  });
-  viewer.addEventListener('load-complete',()=>{
-    const app=viewer._spline;
-    // Hide the floor, the tracking marker and the baked 3D text: speech is rendered in HTML.
-    for(const name of ['Floor','Cursor Target','Message','Message 2','Message 3']){const o=app?.findObjectByName(name);if(o)o.visible=false}
-    // The exported camera looks at a point above the character, and its position is fixed at runtime.
-    // Move the character into the camera's line of sight, then zoom so it fits the small square box.
-    const camera=app?.findObjectByName('Camera'),robot=app?.findObjectByName('Robot');
-    if(camera&&robot){robot.position.x=camera.position.x;robot.position.y=camera.position.y}
-    app?.setZoom?.(AVATAR_ZOOM);
-    try{const r=app?._renderer||app?.renderer;r?.setPixelRatio?.(Math.min(2,devicePixelRatio))}catch{}
-    roamer.classList.add('ready');
-  });
-  import('https://cdn.spline.design/@splinetool/viewer@2.0.159/build/spline-viewer.js').catch(()=>roamer.classList.remove('ready'));
-  scheduleIdle();
-  return {page(name){page=name;if(!stepped){replan();return}replan('page');setTimeout(()=>say(lines[name]||'…'),walk?1400:600)}};
-})();
 
 restore();go(state.page,false);
