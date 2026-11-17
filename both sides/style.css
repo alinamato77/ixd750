@@ -169,20 +169,11 @@ textarea.statement { margin:14px 0 6px; min-height:126px; }
 .avatar.has-caption spline-viewer { mask-image:linear-gradient(to bottom,transparent 44%,black 47%); }
 #avatar-message { position:absolute; bottom:54%; left:50%; transform:translateX(-50%); max-width:min(32ch,92%); width:max-content; padding:8px 16px; border:1px solid #d8dfd4; border-radius:18px; background:#1d211f; color:#fafcf7; font-size:clamp(15px,1.4vw,18px); line-height:1.35; text-align:center; pointer-events:none; opacity:0; }
 
-/* The clerk occupies a real grid cell. Its canvas and caption never float over testimony. */
-.hero { --clerk-size:clamp(5rem,10vw,8.75rem); display:grid; grid-template-columns:minmax(0,1fr) auto; column-gap:clamp(16px,4vw,48px); align-items:center; max-width:880px; margin-inline:auto; text-align:start; }
-.hero:not([data-page="home"]) { --clerk-size:5.5rem; }
-.hero h1,.hero #intro { grid-column:1; }
-.hero h1 { align-self:end; }
-.hero #intro { align-self:start; justify-self:start; margin:10px 0 0; max-width:56ch; }
-.clerk { grid-column:2;grid-row:1 / span 2;display:grid;justify-items:center;align-content:center;min-width:0;max-width:13rem; }
-#avatar-slot { position:relative;isolation:isolate;display:grid;place-items:center;width:var(--clerk-size);height:var(--clerk-size);overflow:hidden;background:transparent;pointer-events:auto; }
-#avatar-slot spline-viewer { position:absolute;inset:0;display:block;width:100%;height:100%;opacity:0;pointer-events:auto; }
-#avatar-slot.scene-ready spline-viewer { opacity:1; }
-#avatar-slot.scene-ready .orb-poster { visibility:hidden; }
-#avatar-slot .orb-poster { width:69%;height:auto;aspect-ratio:1; }
-#avatar-message { position:static;display:block;max-width:22ch;margin:0;transform:none;opacity:1;width:auto;line-height:1.35;font-size:.875rem;text-align:center;color:var(--ink);background:transparent;box-shadow:none;border:none;padding:0; }
-#clerk-toggle { min-height:32px;font-size:.8rem;padding:4px 8px;color:var(--muted); }
+.hero { display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 24px;align-items:center;max-width:880px;margin-inline:auto;text-align:start; }
+.hero #intro { grid-column:1/-1;margin:0;max-width:56ch; }
+#clerk-toggle { min-height:44px;min-width:44px; }
+#avatar-layer { position:fixed;inset:0;z-index:10;pointer-events:none; }
+#avatar-layer spline-viewer { display:block;width:100%;height:100%;pointer-events:none; }
 .reading { min-width:0; }
 .reading h4 { margin:0 0 8px; font-size:1rem; }
 .reading p { line-height:1.6; }
@@ -209,10 +200,6 @@ textarea.statement { margin:14px 0 6px; min-height:126px; }
 #reading-route { margin-top:6px; }
 @media(max-width:680px) {
   .grid.folds { grid-template-columns:minmax(0,1fr); }
-  .hero,.hero:not([data-page="home"]) { --clerk-size:4.75rem;column-gap:12px; }
-  .clerk { max-width:7rem; }
-  .hero #intro { grid-row:2;grid-column:1 / -1; }
-  .clerk { grid-row:1; }
   .passages button,.reading-tools button,#clerk-toggle { min-height:44px; }
 }
 @media(forced-colors:active) { .reading-key li,.passages button,.passages mark { border-color:CanvasText; } .reading-bar i { background:Highlight;forced-color-adjust:none; } }
@@ -220,9 +207,3 @@ textarea.statement { margin:14px 0 6px; min-height:126px; }
 .party-identity { display:inline;overflow-wrap:anywhere; }
 .inline-portrait { display:inline-block;width:1.55em;height:1.55em;vertical-align:middle;margin-inline-start:.3em; }
 .cardhead .party-label { min-width:0; }
-#avatar-slot { touch-action:pan-y; }
-
-/* Keep the Spline pointer coordinate system stable as its caption changes. */
-.clerk { inline-size:13rem; }
-#avatar-message { inline-size:100%; min-block-size:2.7em; }
-@media(max-width:680px) { .clerk { inline-size:7rem; } #avatar-message { min-block-size:4.05em; } }
